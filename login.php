@@ -5,13 +5,18 @@
    <meta charset="utf-8">
    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+   <!-- CSS -->
    <link rel="stylesheet" href="css/bootstrap.css">
    <link rel="stylesheet" href="css/style.css">
-   <link href="https://fonts.googleapis.com/css?family=Poppins:600&display=swap" rel="stylesheet">
+   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
    <link rel="stylesheet" href="css/all.min.css">
    <link rel="stylesheet" href="css/fontawesome.min.css">
    <link href="img/candado.png" rel="shortcut icon">
+
+   <!-- Primero jQuery -->
+   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
    <title>Inicio de sesión</title>
+
 </head>
 
 <body>
@@ -43,19 +48,25 @@
                   <input type="password" id="input" class="input" name="password">
                </div>
             </div>
-            <!-- <div class="view">
+            <div class="view">
                <div class="fas fa-eye verPassword" onclick="vista()" id="verPassword"></div>
-            </div> -->
+            </div>
+            <a href="forgot_password.php" class="forgot-password mt-3">¿Olvidaste tu contraseña?</a>
             <input name="btningresar" class="btn mt-5" type="submit" value="INICIAR SESION">
          </form>
       </div>
    </div>
+
+   <!-- Luego Popper.js -->
+   <script src="js/popper.min.js"></script>
+
+   <!-- Después Bootstrap -->
+   <script src="js/bootstrap.bundle.js"></script>
+   <script src="js/bootstrap.js"></script>
+
+   <!-- Finalmente tus scripts -->
    <script src="js/main.js"></script>
    <script src="js/main2.js"></script>
-   <script src="js/bootstrap.bundle.js"></script>
-   <script src="js/popper.min.js"></script>
-   <script src="js/bootstrap.js"></script>
-   <script src="js/bootstrap.min.js"></script>
    <script src="js/fontawesome.js"></script>
 
 </body>
