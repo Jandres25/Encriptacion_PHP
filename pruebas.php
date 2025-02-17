@@ -26,3 +26,50 @@ if (password_verify($passwordform, $passwordhash)) {
 } else {
     echo 'La contraseña no es válida';
 }
+
+echo '<br>';
+
+function cargarVariablesEntorno($ruta)
+{
+    if (!file_exists($ruta)) {
+        return false;
+    }
+
+    $archivo = fopen($ruta, 'r');
+    if ($archivo) {
+        while (($linea = fgets($archivo)) !== false) {
+            $linea = trim($linea);
+            if (empty($linea) || strpos($linea, '#') === 0) {
+                continue; // Ignorar líneas vacías y comentarios
+            }
+
+            list($nombre, $valor) = explode('=', $linea, 2);
+            $nombre = trim($nombre);
+            $valor = trim($valor);
+
+            if (!array_key_exists($nombre, $_SERVER) && !array_key_exists($nombre, $_ENV)) {
+                putenv(sprintf('%s=%s', $nombre, $valor));
+                $_ENV[$nombre] = $valor;
+                $_SERVER[$nombre] = $valor;
+            }
+        }
+        fclose($archivo);
+        return true;
+    }
+
+    return false;
+}
+
+$rutaArchivoEnv = __DIR__ . '/.env'; // Ajusta la ruta si es necesario
+cargarVariablesEntorno($rutaArchivoEnv);
+
+// Ahora puedes acceder a las variables de entorno
+$smtpHost = $_ENV["SMTP_HOST"];
+$smtpUsername = $_ENV["SMTP_USERNAME"];
+$smtpPassword = $_ENV["SMTP_PASSWORD"];
+$smtpPort = $_ENV["SMTP_PORT"];
+
+echo "Host: " . $smtpHost . PHP_EOL;
+echo "Username: " . $smtpUsername . PHP_EOL;
+echo "Password: " . $smtpPassword . PHP_EOL;
+echo "Port: " . $smtpPort . PHP_EOL;
