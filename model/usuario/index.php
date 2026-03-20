@@ -4,14 +4,18 @@ $sql = $conexion->query("SELECT * from `usuario`");
 
 // Función para eliminar un usuario
 if (isset($_GET["id"])) {
-    $id = $_GET["id"];
-    $sql = "DELETE FROM usuario WHERE ID = $id";
-    if ($conexion->query($sql) === TRUE) {
-        $mensaje = "Usuario Eliminado Correctamente";
-        header('location:index.php?mensaje=' . $mensaje);
+    $id = (int)$_GET["id"];
+    $stmt = $conexion->prepare("DELETE FROM usuario WHERE ID = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    if ($stmt->affected_rows > 0) {
+        $stmt->close();
+        header('location:index.php?mensaje=Usuario Eliminado Correctamente');
+        exit;
     } else {
-        $mensaje_error = "Error al Eliminar Usuario";
-        header('location:index.php?mensaje_error=' . $mensaje);
+        $stmt->close();
+        header('location:index.php?mensaje_error=Error al Eliminar Usuario');
+        exit;
     }
 }
 ?>
@@ -28,13 +32,13 @@ if (isset($_GET["id"])) {
 <?php } ?>
 <?php if (isset($_GET['mensaje_error'])) { ?>
     <div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
-        <strong><?php echo $_GET['mensaje']; ?></strong>
+        <strong><?php echo $_GET['mensaje_error']; ?></strong>
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
 <?php } ?>
-<section class="container-fluid mt-4">
+<section class="container-fluid mb-3">
     <h2>Lista de Usuarios</h2>
     <div class="card">
         <div class="card-header">

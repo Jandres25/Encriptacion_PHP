@@ -2,38 +2,50 @@
 include('../conexion.php');
 
 if (isset($_GET["id"])) {
-    $id = $_GET["id"];
-    // Obtener los datos del usuario a editar
-    $sql = "SELECT * FROM usuario WHERE ID = $id";
-    $result = $conexion->query($sql);
+    $id = (int)$_GET["id"];
+    $stmt = $conexion->prepare("SELECT * FROM usuario WHERE ID = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     if ($result->num_rows > 0) {
         $usuario = $result->fetch_assoc();
     } else {
         echo "No se encontró el usuario.";
         exit;
     }
+    $stmt->close();
 } else {
     echo "ID de usuario no especificado.";
     exit;
 }
 
 if (isset($_POST["editar_usuario"])) {
-    // Obtener los datos del formulario
-    $nombres = $_POST["nombres"];
+    $nombres   = $_POST["nombres"];
     $apellidos = $_POST["apellidos"];
-    $usuario = $_POST["usuario"];
-    $password = $_POST["password"];
-    // Crear un hash de contraseña utilizando BCRYPT
-    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+    $correo    = $_POST["correo"] ?? '';
+    $usuarioNombre = $_POST["usuario"];
+    $esAdmin   = isset($_POST["esAdmin"]) ? 1 : 0;
 
-    // Actualizar los datos del usuario en la base de datos
-    $sql = "UPDATE usuario SET Nombres='$nombres', Apellidos='$apellidos', Usuario='$usuario', Clave='$passwordHash' WHERE ID=$id";
-    if ($conexion->query($sql) === TRUE) {
-        $mensaje = "Usuario Actualizado Correctamente";
-        header('location:index.php?mensaje=' . $mensaje);
+    if (!empty($_POST['password'])) {
+        $passwordHash = password_hash($_POST['password'], PASSWORD_DEFAULT);
     } else {
-        $mensaje_error = "Error al Actualizar el Usuario";
-        header('location:index.php?mensaje_error=' . $mensaje_error);
+        $passwordHash = $usuario['Clave'];
+    }
+
+    $stmt = $conexion->prepare(
+        "UPDATE usuario SET Nombres=?, Apellidos=?, correo=?, Usuario=?, Clave=?, EsAdmin=? WHERE ID=?"
+    );
+    $stmt->bind_param("sssssii", $nombres, $apellidos, $correo, $usuarioNombre, $passwordHash, $esAdmin, $id);
+    $stmt->execute();
+
+    if ($stmt->affected_rows >= 0) {
+        $stmt->close();
+        header('location:index.php?mensaje=Usuario Actualizado Correctamente');
+        exit;
+    } else {
+        $stmt->close();
+        header('location:index.php?mensaje_error=Error al Actualizar el Usuario');
+        exit;
     }
 }
 ?>
@@ -46,43 +58,59 @@ if (isset($_POST["editar_usuario"])) {
             Datos del usuario
         </div>
         <div class="card-body">
-            <form action="" method="post" enctype="multipart/form-data">
+            <form action="" method="post">
                 <div class="mb-3">
-                    <label label for="nombres" class="form-label">Nombres del usuario</label>
+                    <label for="nombres" class="form-label">Nombres del usuario</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text" id="basic-addon1"><i class="fas fa-user"></i></span>
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input type="text" class="form-control" name="nombres" id="nombres" aria-describedby="helpId" value="<?php echo $usuario["Nombres"]; ?>">
+                        <input type="text" class="form-control" name="nombres" id="nombres" value="<?= htmlspecialchars($usuario['Nombres']) ?>">
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label label for="apellidos" class="form-label">Apellidos del usuario</label>
+                    <label for="apellidos" class="form-label">Apellidos del usuario</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text" id="basic-addon1"><i class="fas fa-user"></i></span>
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
-                        <input type="text" class="form-control" name="apellidos" id="apellidos" aria-describedby="helpId" value="<?php echo $usuario["Apellidos"]; ?>">
+                        <input type="text" class="form-control" name="apellidos" id="apellidos" value="<?= htmlspecialchars($usuario['Apellidos']) ?>">
                     </div>
                 </div>
-                <label label for="usuario" class="form-label">Usuario</label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text" id="basic-addon1"><i class="fas fa-user"></i></span>
-                    </div>
-                    <input type="text" class="form-control" name="usuario" id="usuario" aria-describedby="helpId" value="<?php echo $usuario["Usuario"]; ?>">
-                </div>
-                <div class="mb-3 mt-3">
-                    <label for="password" class="form-label">Password:</label>
+                <div class="mb-3">
+                    <label for="correo" class="form-label">Correo electrónico</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text" id="basic-addon1"><i class="fas fa-lock"></i></span>
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         </div>
-                        <input type="password" class="form-control" name="password" id="password" aria-describedby="helpId" value="<?php echo $usuario['Clave']; ?>">
+                        <input type="email" class="form-control" name="correo" id="correo" value="<?= htmlspecialchars($usuario['correo']) ?>">
                     </div>
+                </div>
+                <div class="mb-3">
+                    <label for="usuario" class="form-label">Usuario</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        </div>
+                        <input type="text" class="form-control" name="usuario" id="usuario" value="<?= htmlspecialchars($usuario['Usuario']) ?>">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        </div>
+                        <input type="password" class="form-control" name="password" id="password" placeholder="Dejar vacío para no cambiar">
+                    </div>
+                    <small class="form-text text-muted">Dejar vacío para mantener la contraseña actual</small>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="esAdmin" id="esAdmin" value="1" <?= $usuario['EsAdmin'] ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="esAdmin">Es Administrador</label>
                 </div>
                 <button type="submit" name="editar_usuario" class="btn btn-outline-success mr-1"><i class="fas fa-pen"></i> Guardar Cambios</button>
-                <a name="" id="" class="btn btn-outline-primary" href="<?php echo $url; ?>model/usuario/" role="button"><i class="fas fa-undo"></i> Cancelar</a>
+                <a class="btn btn-outline-primary" href="<?= $url ?>model/usuario/" role="button"><i class="fas fa-undo"></i> Cancelar</a>
             </form>
         </div>
         <div class="card-footer text-muted"></div>

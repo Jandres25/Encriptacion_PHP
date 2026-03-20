@@ -40,10 +40,10 @@ if (isset($_POST['btnactualizar'])) {
         mysqli_stmt_execute($stmt_mark);
 
         echo "<script>alert('Contraseña actualizada exitosamente.');
-              window.location = '../index.php';</script>";
+              window.location = '" . APP_URL . "/';</script>";
     } else {
         echo "<script>alert('Token inválido o expirado.');
-              window.location = '../index.php';</script>";
+              window.location = '" . APP_URL . "/';</script>";
     }
 
     mysqli_stmt_close($stmt);

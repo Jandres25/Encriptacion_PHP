@@ -6,13 +6,13 @@ if (!empty($_POST["btningresar"])) {
         $password = $_POST["password"];
         $sql = $conexion->query("SELECT * FROM `usuario` WHERE Usuario = '$usuario'");
         if ($datos = $sql->fetch_object()) {
-            $_SESSION["ID"] = $datos->ID;
-            $_SESSION["Nombre"] = $datos->Nombres;
-            $_SESSION["EsAdmin"] = $datos->EsAdmin;
             $passwordEncriptado = $datos->Clave;
 
             if (password_verify($password, $passwordEncriptado)) {
-                header("location:./");
+                $_SESSION["ID"] = $datos->ID;
+                $_SESSION["Nombre"] = $datos->Nombres;
+                $_SESSION["EsAdmin"] = $datos->EsAdmin;
+                header("location:" . APP_URL . "/");
             } else {
                 echo "<div class='alert alert-danger'>Contraseña Incorrecta</div>";
             }

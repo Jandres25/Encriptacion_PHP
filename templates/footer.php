@@ -8,11 +8,11 @@
 </footer>
 
 <!-- Libraries -->
-<script src="../../js/jquery.min.js"></script>
-<script src="../../js/popper.min.js"></script>
-<script src="../../js/bootstrap.min.js"></script>
-<script src="../../js/fontawesome.js"></script>
-<script src="../../DataTables/datatables.js"></script>
+<script src="<?= APP_URL ?>/js/jquery.min.js"></script>
+<script src="<?= APP_URL ?>/js/popper.min.js"></script>
+<script src="<?= APP_URL ?>/js/bootstrap.min.js"></script>
+<script src="<?= APP_URL ?>/js/fontawesome.js"></script>
+<script src="<?= APP_URL ?>/DataTables/datatables.js"></script>
 
 <script>
     $(document).ready(function() {

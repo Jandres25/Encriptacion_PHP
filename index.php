@@ -1,9 +1,9 @@
 <?php
+require_once __DIR__ . '/config/config.php';
 session_start();
 $year = date('Y');
 $nombre = isset($_SESSION['Nombre']) ? $_SESSION['Nombre'] : '';
 $esAdmin = isset($_SESSION['EsAdmin']) ? $_SESSION['EsAdmin'] : '';
-$url = "http://localhost/login/";
 
 if (empty($_SESSION["ID"])) {
 	header("location:" . $url . "login.php");
@@ -16,10 +16,10 @@ if (empty($_SESSION["ID"])) {
 <head>
 	<meta charset="UTF-8">
 	<title>Pagina Principal</title>
-	<link rel="stylesheet" href="css/estilo.css">
-	<link rel="stylesheet" href="css/bootstrap.css">
-	<link rel="stylesheet" href="css/fontawesome.min.css">
-	<link href="img/boton-de-inicio.png" rel="shortcut icon">
+	<link rel="stylesheet" href="<?= APP_URL ?>/css/estilo.css">
+	<link rel="stylesheet" href="<?= APP_URL ?>/css/bootstrap.css">
+	<link rel="stylesheet" href="<?= APP_URL ?>/css/fontawesome.min.css">
+	<link href="<?= APP_URL ?>/img/boton-de-inicio.png" rel="shortcut icon">
 </head>
 
 <body>
@@ -32,21 +32,21 @@ if (empty($_SESSION["ID"])) {
 			</ol>
 			<div class="carousel-inner">
 				<div class="carousel-item active" style="height: 100vh">
-					<img src="img/imagen1.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
+					<img src="<?= APP_URL ?>/img/imagen1.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
 					<div class="carousel-caption d-none d-md-block">
 						<h5 class="display-4 mb-4 font-weight-bold">BOOTSTRAP</h5>
 						<p>Nulla vitae elit libero, a pharetra augue mollis interdum.</p>
 					</div>
 				</div>
 				<div class="carousel-item" style="height: 100vh">
-					<img src="img/imagen2.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
+					<img src="<?= APP_URL ?>/img/imagen2.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
 					<div class="carousel-caption d-none d-md-block">
 						<h5 class="display-4 mb-4 font-weight-bold">BOOTSTRAP</h5>
 						<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
 					</div>
 				</div>
 				<div class="carousel-item" style="height: 100vh">
-					<img src="img/imagen3.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
+					<img src="<?= APP_URL ?>/img/imagen3.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
 					<div class="carousel-caption d-none d-md-block">
 						<h5 class="display-4 mb-4 font-weight-bold">BOOTSTRAP</h5>
 						<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur.</p>
@@ -74,10 +74,10 @@ if (empty($_SESSION["ID"])) {
 		<div class="collapse navbar-collapse" id="navbarTogglerDemo01">
 			<div class="navbar-nav mr-auto">
 				<div class="offset-md-1 mr-auto text-center"></div>
-				<a class="nav-item nav-link text-justify active ml-3 hover-primary" href="<?php echo $url ?>">Inicio</a>
-				<a class="nav-item nav-link text-justify ml-3 hover-primary" href="<?php echo $url ?>">Nosotros</a>
+				<a class="nav-item nav-link text-justify active ml-3 hover-primary" href="<?= $url ?>">Inicio</a>
+				<a class="nav-item nav-link text-justify ml-3 hover-primary" href="<?= $url ?>">Nosotros</a>
 				<?php if ($esAdmin == true) { ?>
-					<a class="nav-item nav-link text-nowrap ml-3 hover-primary" href="<?php echo $url ?>model/usuario/">Usuarios</a>
+					<a class="nav-item nav-link text-nowrap ml-3 hover-primary" href="<?= $url ?>model/usuario/">Usuarios</a>
 				<?php } ?>
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle text-justify ml-3" href="" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -89,7 +89,7 @@ if (empty($_SESSION["ID"])) {
 						<a class="dropdown-item" href="#">Otros</a>
 					</div>
 				</li>
-				<a class="nav-item nav-link text-justify ml-3 hover-primary" href="<?php echo $url; ?>controlador/controlador_cerrar_session.php">Salir</a>
+				<a class="nav-item nav-link text-justify ml-3 hover-primary" href="<?= $url; ?>controlador/controlador_cerrar_session.php">Salir</a>
 			</div>
 			<div class="text-center justify-content-center">
 				<a class="btn btn-primary mr-1" target="_blank" href="https://www.facebook.com"><i class="fab fa-facebook"></i> Facebook</a>
@@ -114,15 +114,15 @@ if (empty($_SESSION["ID"])) {
 
 	<footer>
 		<div class="d-flex align-items-center justify-content-center bg-dark text-white" style="height: 70px;">
-			<b5>&copy; Derechos Reservados UPDS | <?php echo $year ?>
+			<b5>&copy; Derechos Reservados UPDS | <?= $year ?>
 				<b5 />
 		</div>
 	</footer>
 
-	<script src="js/jquery-3.3.1.slim.min.js"></script>
-	<script src="js/popper.min.js"></script>
-	<script src="js/bootstrap.min.js"></script>
-	<script src="js/fontawesome.js"></script>
+	<script src="<?= APP_URL ?>/js/jquery-3.3.1.slim.min.js"></script>
+	<script src="<?= APP_URL ?>/js/popper.min.js"></script>
+	<script src="<?= APP_URL ?>/js/bootstrap.min.js"></script>
+	<script src="<?= APP_URL ?>/js/fontawesome.js"></script>
 </body>
 
 </html>

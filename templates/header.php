@@ -1,7 +1,7 @@
 <?php
+require_once __DIR__ . '/../config/config.php';
 session_start();
 $year = date('Y');
-$url = "http://localhost/login/";
 
 if (empty($_SESSION["ID"])) {
     header("location:" . $url . "login.php");
@@ -17,11 +17,11 @@ if (empty($_SESSION["ID"])) {
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <link rel="stylesheet" href="../../css/estilo.css">
-    <link rel="stylesheet" href="../../css/bootstrap.css">
-    <link rel="stylesheet" href="../../css/fontawesome.min.css">
-    <link href="../../img/usuario.png" rel="shortcut icon">
-    <link href="../../DataTables/datatables.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/estilo.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/bootstrap.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/fontawesome.min.css">
+    <link href="<?= APP_URL ?>/img/usuario.png" rel="shortcut icon">
+    <link href="<?= APP_URL ?>/DataTables/datatables.css" rel="stylesheet">
 
     <style>
         body {

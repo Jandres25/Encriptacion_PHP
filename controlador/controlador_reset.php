@@ -10,41 +10,6 @@ require '../PHPMailer-master/src/Exception.php';
 require '../PHPMailer-master/src/PHPMailer.php';
 require '../PHPMailer-master/src/SMTP.php';
 
-// Función para cargar variables de entorno
-function cargarVariablesEntorno($ruta)
-{
-    if (!file_exists($ruta)) {
-        die("Error: No se encontró el archivo .env en la ruta especificada.");
-    }
-
-    $archivo = fopen($ruta, 'r');
-    if ($archivo) {
-        while (($linea = fgets($archivo)) !== false) {
-            $linea = trim($linea);
-            if (empty($linea) || strpos($linea, '#') === 0) {
-                continue; // Ignorar líneas vacías y comentarios
-            }
-
-            list($nombre, $valor) = explode('=', $linea, 2);
-            $nombre = trim($nombre);
-            $valor = trim($valor);
-
-            if (!array_key_exists($nombre, $_SERVER) && !array_key_exists($nombre, $_ENV)) {
-                putenv(sprintf('%s=%s', $nombre, $valor));
-                $_ENV[$nombre] = $valor;
-                $_SERVER[$nombre] = $valor;
-            }
-        }
-        fclose($archivo);
-    } else {
-        die("Error: No se pudo abrir el archivo .env.");
-    }
-}
-
-// Cargar las variables de entorno desde el archivo .env
-$rutaArchivoEnv = __DIR__ . '/../.env'; // Ajusta la ruta si es necesario
-cargarVariablesEntorno($rutaArchivoEnv);
-
 // Verificar si las variables existen antes de usarlas
 $smtpHost = isset($_ENV["SMTP_HOST"]) ? $_ENV["SMTP_HOST"] : null;
 $smtpUsername = isset($_ENV["SMTP_USERNAME"]) ? $_ENV["SMTP_USERNAME"] : null;
@@ -88,7 +53,7 @@ if (isset($_POST['btnrecuperar'])) {
             $mail->SMTPAuth = true;
             $mail->Username = $smtpUsername; // Tu correo Gmail
             $mail->Password = $smtpPassword; // Tu contraseña de aplicación de Gmail
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Cambiar a SMTPS
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = (int)$smtpPort; // Puerto para SMTPS
             $mail->CharSet = 'UTF-8';
 
@@ -97,7 +62,7 @@ if (isset($_POST['btnrecuperar'])) {
             $mail->addAddress($email);
 
             //Contenido
-            $resetLink = "http://localhost/login/reset_password.php?token=" . $token;
+            $resetLink = $url . "reset_password.php?token=" . $token;
 
             $mail->isHTML(true);
             $mail->Subject = 'Recuperación de Contraseña';

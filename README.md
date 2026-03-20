@@ -18,9 +18,8 @@ Este proyecto es una aplicación web desarrollada en PHP que implementa un siste
 
 - PHP >= 7.4
 - MySQL/MariaDB
-- Servidor web (Apache/Nginx)
-- Composer (para gestionar dependencias)
-- Cuenta de correo electrónico para el envío de notificaciones
+- Servidor web (Apache recomendado — XAMPP)
+- Cuenta de correo con contraseña de aplicación (Gmail recomendado)
 
 ## 🔧 Instalación
 
@@ -34,9 +33,25 @@ git clone https://github.com/Jandres25/Encriptacion_PHP.git
 cd Encriptacion_PHP
 ```
 
-3. Instala las dependencias con Composer:
+3. Copia el archivo de configuración y edítalo con tus credenciales:
 ```bash
-composer install
+cp .env.example .env
+```
+
+Variables requeridas en `.env`:
+```
+DB_HOST=localhost
+DB_USERNAME=root
+DB_PASSWORD=
+DB_DATABASE=login
+
+SMTP_HOST=smtp.gmail.com
+SMTP_USERNAME=tu@gmail.com
+SMTP_PASSWORD=tu_contraseña_de_aplicacion
+SMTP_PORT=587
+
+APP_URL=http://localhost/Encriptacion_PHP
+APP_TIMEZONE=America/Bogota
 ```
 
 4. Importa la base de datos:
@@ -44,42 +59,42 @@ composer install
 mysql -u tu_usuario -p < login.sql
 ```
 
-5. Configura las credenciales de tu base de datos y correo electrónico en los archivos correspondientes.
+5. Coloca el proyecto en la carpeta web de tu servidor (ej. `htdocs/` en XAMPP) y accede vía `APP_URL`.
 
 ## 📁 Estructura del Proyecto
 
 ```
+├── config/            # Bootstrap: carga .env, DB, constante APP_URL
+├── controlador/       # Lógica de negocio (login, reset, sesión)
+├── model/             # Acceso a datos y módulo de usuarios
+│   └── usuario/       # CRUD de usuarios (admin)
+├── templates/         # Header y footer compartidos
+├── PHPMailer-master/  # Librería de envío de correos (sin Composer)
 ├── DataTables/        # Librería para tablas dinámicas
-├── PHPMailer-master/  # Librería para envío de correos
-├── controlador/       # Lógica de negocio
-├── css/              # Estilos CSS
-├── img/              # Imágenes del proyecto
-├── js/               # Scripts JavaScript
-├── model/            # Modelos de datos
-├── templates/        # Plantillas HTML
-├── webfonts/         # Fuentes web
-├── index.php         # Punto de entrada
-├── login.php         # Manejo de autenticación
-├── forgot_password.php # Recuperación de contraseña
-├── reset_password.php # Restablecimiento de contraseña
-└── README.md         # Documentación
+├── css/ js/ img/      # Assets estáticos
+├── index.php          # Dashboard principal (requiere sesión)
+├── login.php          # Inicio de sesión
+├── forgot_password.php # Solicitud de recuperación de contraseña
+├── reset_password.php  # Formulario de nueva contraseña (vía token)
+├── .env.example       # Plantilla de variables de entorno
+└── login.sql          # Schema e inserción de datos iniciales
 ```
 
 ## 🔒 Seguridad
 
-El proyecto implementa las siguientes medidas de seguridad:
-
-- Encriptación de contraseñas mediante `password_hash()`
-- Protección contra inyección SQL
-- Tokens seguros para recuperación de contraseña
-- Validación de datos de entrada
+- Contraseñas hasheadas con `password_hash()` (bcrypt)
+- Sesión asignada únicamente tras `password_verify()` exitoso
+- Tokens de recuperación de 256 bits, con expiración de 1 hora y uso único
+- Todos los queries de base de datos usan MySQLi prepared statements
+- Correos validados con `filter_var()` antes de consultar la BD
+- SMTP con STARTTLS (puerto 587)
 
 ## 💡 Uso
 
-1. Accede a la aplicación a través de tu navegador web
-2. Regístrate como nuevo usuario
-3. Inicia sesión con tus credenciales
-4. En caso de olvidar tu contraseña, utiliza la opción "¿Olvidaste tu contraseña?"
+1. Accede a `APP_URL/login.php` en tu navegador
+2. Inicia sesión con las credenciales del seed (usuario `Admin`)
+3. Los usuarios con `EsAdmin = 1` pueden acceder al módulo de gestión de usuarios en `model/usuario/`
+4. Para recuperar contraseña, usa el enlace "¿Olvidaste tu contraseña?" en el login
 
 ## 🤝 Contribución
 

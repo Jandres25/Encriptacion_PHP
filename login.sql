@@ -63,8 +63,10 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `correo` varchar(100) NOT NULL,
   `Usuario` varchar(50) NOT NULL,
   `Clave` varchar(255) NOT NULL,
-  `EsAdmin` tinyint(1) NOT NULL,
-  PRIMARY KEY (`ID`)
+  `EsAdmin` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `correo` (`correo`),
+  UNIQUE KEY `Usuario` (`Usuario`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -78,11 +80,12 @@ CREATE TABLE IF NOT EXISTS `usuario` (
 INSERT INTO `usuario` (`ID`, `Nombres`, `Apellidos`, `correo`, `Usuario`, `Clave`, `EsAdmin`) VALUES
 (1, 'Jose Andres', 'Meneces Lopez', 'jandrespb4@gmail.com', 'Admin', '$2y$10$3T3hu9AM7shPtkFQfM7jluFTMLfL474gUjbfN7eMTcSlPTrb.ktLK', 1),
 (2, 'Lucas', 'Martinez Peralta', 'usuario2@gmail.com', 'Luca', '$2y$10$yZcR40UMne.eQxTVNFb0jOIYrEC6Tj2dj1yJt2FGxzMizNHc0hZWS', 0),
-(3, 'Juan Juanito', 'Perez Mamio', '', 'Juan', '0000', 0),
-(4, 'Sofia', 'Oropesa Cespedez', '', 'Sofy', '0000', 0),
-(5, 'Maria Christina', 'Johnson Smith', '', 'Mary', '0000', 0),
-(6, 'Martin', 'Morales', '', 'Martins', '$2y$10$x.bQLZ9TfGsOHmIl5lwM8.badBz9G9kqLRlYhxw25Lpzq0HN0wK8m', 0),
-(9, 'Gustavo', 'Aguilar Mendoza', '', 'Gus', '$2y$10$3YQR0fPiN4xeMIL3QYDXBOQrOWr6BQfRgwjeFdB1Bf18OlOM6M0NO', 0);
+(3, 'Juan Juanito', 'Perez Mamio', 'juanito@gmail.com', 'Juan', '0000', 0),
+(4, 'Sofia', 'Oropesa Cespedez', 'sofia@gmail.com', 'Sofy', '0000', 0),
+(5, 'Maria Christina', 'Johnson Smith', 'maria@gmail.com', 'Mary', '0000', 0),
+(6, 'Martin', 'Morales', 'martin@gmail.com', 'Martins', '$2y$10$x.bQLZ9TfGsOHmIl5lwM8.badBz9G9kqLRlYhxw25Lpzq0HN0wK8m', 0),
+(7, 'Gustavo', 'Aguilar Mendoza', 'gustavo@gmail.com', 'Gus', '$2y$10$3YQR0fPiN4xeMIL3QYDXBOQrOWr6BQfRgwjeFdB1Bf18OlOM6M0NO', 0);
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
