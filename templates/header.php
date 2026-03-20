@@ -1,11 +1,13 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
-session_start();
 $year = date('Y');
 
-if (empty($_SESSION["ID"])) {
-    header("location:" . $url . "login.php");
+if (empty($_SESSION['user_id'])) {
+    header('Location: ' . APP_URL . '/?page=login');
+    exit;
 }
+
+$year = date('Y');
 
 ?>
 
@@ -43,7 +45,7 @@ if (empty($_SESSION["ID"])) {
             <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
                 <div class="navbar-nav mr-auto">
                     <div class="mr-auto text-center"></div>
-                    <a class="nav-item nav-link text-nowrap active ml-3 hover-primary" href="<?php echo $url ?>">Back to Home</a>
+                    <a class="nav-item nav-link text-nowrap active ml-3 hover-primary" href="<?= APP_URL ?>/">Back to Home</a>
                 </div>
                 <div class="text-center justify-content-center">
                     <a class="btn btn-primary mr-1" target="_blank" href="https://www.facebook.com"><i class="fab fa-facebook"></i> Facebook</a>
