@@ -6,7 +6,7 @@
     </div>
 <?php endif; ?>
 
-<section class="container mt-50">
+<section class="container mt-4">
     <h2>Edit User</h2>
     <div class="card">
         <div class="card-header">User Details</div>

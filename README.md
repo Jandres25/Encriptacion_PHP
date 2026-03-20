@@ -1,10 +1,16 @@
 
+<div align="center">
+
 # Authentication and Password Recovery System
 
-[![PHP Version](https://img.shields.io/badge/PHP->=7.4-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.0.0)
+[![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
+[![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 
 PHP web application implementing a secure authentication system with bcrypt password hashing and email-based password recovery.
+
+</div>
 
 ## Features
 
@@ -17,7 +23,7 @@ PHP web application implementing a secure authentication system with bcrypt pass
 
 ## Requirements
 
-- PHP >= 7.4
+- PHP >= 8.2
 - MySQL / MariaDB
 - Apache (XAMPP recommended)
 - Gmail account with an App Password (or any SMTP provider)

@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 PHP web application implementing a secure authentication system with bcrypt password hashing and email-based password recovery via PHPMailer.
 
 - **Server:** XAMPP (Apache + MySQL) at `http://localhost/Encriptacion_PHP/`
+- **PHP:** >= 8.2
 - **Database:** MySQL/MariaDB (import `database/schema.sql` to initialize)
 - **Dependencies:** PHPMailer (bundled in `libs/PHPMailer/`)
 

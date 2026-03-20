@@ -9,7 +9,7 @@
     </div>
 <?php endif; ?>
 <?php if (!empty($_GET['error'])): ?>
-    <div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show text-center m-auto" style="max-width:50%;" role="alert">
         <strong><?= htmlspecialchars($_GET['error']) ?></strong>
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -47,49 +47,56 @@
                                 <td><?= htmlspecialchars($user['last_name']) ?></td>
                                 <td><?= htmlspecialchars($user['username']) ?></td>
                                 <td><?= htmlspecialchars($user['email']) ?></td>
-                                <td><?= $user['is_admin'] ? 'Yes' : 'No' ?></td>
-                                <td class="d-flex justify-content-center">
-                                    <a class="btn btn-outline-secondary mr-3"
+                                <td>
+                                    <?php if ($user['is_admin']): ?>
+                                        <span class="badge badge-success">Yes</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-secondary">No</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <a class="btn btn-sm btn-outline-secondary mr-1"
                                        href="<?= APP_URL ?>/?page=users/edit&id=<?= $user['id'] ?>" role="button">
                                         <i class="fas fa-user-edit"></i> Edit
                                     </a>
-                                    <button type="button" class="btn btn-outline-danger"
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
                                             data-toggle="modal" data-target="#deleteModal<?= $user['id'] ?>">
                                         <i class="fas fa-user-minus"></i> Delete
                                     </button>
                                 </td>
                             </tr>
-                            <!-- Delete confirmation modal -->
-                            <div class="modal fade" id="deleteModal<?= $user['id'] ?>" tabindex="-1" role="dialog">
-                                <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h4 class="modal-title">Delete User</h4>
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                <span>&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <h5>Are you sure you want to delete this user?</h5>
-                                            <p><strong>ID:</strong> <?= $user['id'] ?></p>
-                                            <p><strong>Name:</strong> <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></p>
-                                            <p><strong>Username:</strong> <?= htmlspecialchars($user['username']) ?></p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                            <a href="<?= APP_URL ?>/?page=users/delete&id=<?= $user['id'] ?>"
-                                               class="btn btn-danger">Delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         </div>
-        <div class="card-footer text-muted"></div>
     </div>
 </section>
+
+<!-- Delete confirmation modals (outside table) -->
+<?php foreach ($users as $user): ?>
+    <div class="modal fade" id="deleteModal<?= $user['id'] ?>" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete User</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this user?</p>
+                    <p><strong>Name:</strong> <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></p>
+                    <p><strong>Username:</strong> <?= htmlspecialchars($user['username']) ?></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <a href="<?= APP_URL ?>/?page=users/delete&id=<?= $user['id'] ?>"
+                       class="btn btn-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endforeach; ?>
 
 <?php include __DIR__ . '/../../templates/footer.php'; ?>

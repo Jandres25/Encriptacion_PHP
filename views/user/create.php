@@ -67,8 +67,8 @@
                     <input type="checkbox" class="form-check-input" name="is_admin" id="is_admin" value="1">
                     <label class="form-check-label" for="is_admin">Administrator</label>
                 </div>
-                <div class="d-grid gap-2">
-                    <button type="submit" name="add_user" class="btn btn-outline-success">
+                <div class="mt-2">
+                    <button type="submit" name="add_user" class="btn btn-outline-success mr-1">
                         <i class="fas fa-user-plus"></i> Add User
                     </button>
                     <a class="btn btn-outline-primary" href="<?= APP_URL ?>/?page=users" role="button">

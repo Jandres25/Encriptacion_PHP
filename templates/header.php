@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
-$year = date('Y');
 
 if (empty($_SESSION['user_id'])) {
     header('Location: ' . APP_URL . '/?page=login');
@@ -12,10 +11,10 @@ $year = date('Y');
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 
 <head>
-    <title>User List</title>
+    <title>User Management</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -40,11 +39,9 @@ $year = date('Y');
 
 <body>
     <header>
-        <!-- place navbar here -->
         <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
             <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
                 <div class="navbar-nav mr-auto">
-                    <div class="mr-auto text-center"></div>
                     <a class="nav-item nav-link text-nowrap active ml-3 hover-primary" href="<?= APP_URL ?>/">Back to Home</a>
                 </div>
                 <div class="text-center justify-content-center">

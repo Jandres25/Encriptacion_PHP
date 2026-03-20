@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [1.0.0] — 2026-03-20
 
 ### Added
 - Front controller (`index.php`) routing all pages via `?page=` query parameter — no more scattered entry-point files at root
@@ -45,7 +45,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.0.0] — Previous release
+## [0.1.0] — Previous release
 
 ### Added
 - `config/` directory with separation of concerns:
