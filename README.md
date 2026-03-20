@@ -1,44 +1,41 @@
 
-# Sistema de Autenticación y Recuperación de Contraseña
+# Authentication and Password Recovery System
 
 [![PHP Version](https://img.shields.io/badge/PHP->=7.4-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 
-Este proyecto es una aplicación web desarrollada en PHP que implementa un sistema de autenticación seguro con funcionalidades de encriptación de contraseñas y recuperación de credenciales mediante correo electrónico.
+PHP web application implementing a secure authentication system with bcrypt password hashing and email-based password recovery.
 
-## 🚀 Características
+## Features
 
-- Sistema de login seguro
-- Encriptación de contraseñas utilizando `password_hash()`
-- Sistema de recuperación de contraseña vía email
-- Integración con PHPMailer para el envío de correos
-- Interfaz de usuario intuitiva
+- Secure login with bcrypt password hashing (`password_hash()` / `password_verify()`)
+- Password recovery via email with expiring single-use tokens
+- Admin user management (create, edit, delete)
+- Front controller architecture with clean URL routing
+- OOP model layer with MySQLi prepared statements
+- PHPMailer integration for transactional email (STARTTLS)
 
-## 📋 Requisitos Previos
+## Requirements
 
 - PHP >= 7.4
-- MySQL/MariaDB
-- Servidor web (Apache recomendado — XAMPP)
-- Cuenta de correo con contraseña de aplicación (Gmail recomendado)
+- MySQL / MariaDB
+- Apache (XAMPP recommended)
+- Gmail account with an App Password (or any SMTP provider)
 
-## 🔧 Instalación
+## Installation
 
-1. Clona el repositorio:
+1. Clone the repository:
 ```bash
 git clone https://github.com/Jandres25/Encriptacion_PHP.git
-```
-
-2. Navega al directorio del proyecto:
-```bash
 cd Encriptacion_PHP
 ```
 
-3. Copia el archivo de configuración y edítalo con tus credenciales:
+2. Copy and configure the environment file:
 ```bash
 cp .env.example .env
 ```
 
-Variables requeridas en `.env`:
+Edit `.env` with your credentials:
 ```
 DB_HOST=localhost
 DB_USERNAME=root
@@ -46,73 +43,106 @@ DB_PASSWORD=
 DB_DATABASE=login
 
 SMTP_HOST=smtp.gmail.com
-SMTP_USERNAME=tu@gmail.com
-SMTP_PASSWORD=tu_contraseña_de_aplicacion
+SMTP_USERNAME=your@gmail.com
+SMTP_PASSWORD=your_app_password
 SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP
 APP_TIMEZONE=America/Bogota
 ```
 
-4. Importa la base de datos:
+3. Import the database schema:
 ```bash
-mysql -u tu_usuario -p < login.sql
+mysql -u root -p < database/schema.sql
 ```
 
-5. Coloca el proyecto en la carpeta web de tu servidor (ej. `htdocs/` en XAMPP) y accede vía `APP_URL`.
-
-## 📁 Estructura del Proyecto
-
-```
-├── config/            # Bootstrap: carga .env, DB, constante APP_URL
-├── controlador/       # Lógica de negocio (login, reset, sesión)
-├── model/             # Acceso a datos y módulo de usuarios
-│   └── usuario/       # CRUD de usuarios (admin)
-├── templates/         # Header y footer compartidos
-├── PHPMailer-master/  # Librería de envío de correos (sin Composer)
-├── DataTables/        # Librería para tablas dinámicas
-├── css/ js/ img/      # Assets estáticos
-├── index.php          # Dashboard principal (requiere sesión)
-├── login.php          # Inicio de sesión
-├── forgot_password.php # Solicitud de recuperación de contraseña
-├── reset_password.php  # Formulario de nueva contraseña (vía token)
-├── .env.example       # Plantilla de variables de entorno
-└── login.sql          # Schema e inserción de datos iniciales
+4. (Optional) Load sample data:
+```bash
+mysql -u root -p < database/seeds.sql
 ```
 
-## 🔒 Seguridad
+5. Place the project in your server's web root (e.g. `htdocs/` in XAMPP) and open `APP_URL` in your browser.
 
-- Contraseñas hasheadas con `password_hash()` (bcrypt)
-- Sesión asignada únicamente tras `password_verify()` exitoso
-- Tokens de recuperación de 256 bits, con expiración de 1 hora y uso único
-- Todos los queries de base de datos usan MySQLi prepared statements
-- Correos validados con `filter_var()` antes de consultar la BD
-- SMTP con STARTTLS (puerto 587)
+## Project Structure
 
-## 💡 Uso
+```
+├── config/
+│   ├── autoload.php       # Bootstrap entry point
+│   ├── config.php         # Loads .env, defines APP_URL
+│   └── database.php       # MySQLi connection ($connection)
+├── controllers/
+│   ├── auth/              # login, logout, reset, update_password
+│   ├── user/              # index, create, edit, delete
+│   └── home.php           # Dashboard controller
+├── database/
+│   ├── schema.sql         # Table definitions (users + password_resets)
+│   └── seeds.sql          # Sample data
+├── libs/
+│   └── PHPMailer/         # PHPMailer (no Composer)
+├── model/
+│   └── User.php           # App\Model\User — OOP model with prepared statements
+├── public/
+│   ├── css/               # Bootstrap, FontAwesome, custom styles
+│   ├── DataTables/        # DataTables library
+│   ├── img/               # Images and icons
+│   ├── js/                # jQuery, Bootstrap JS, FontAwesome JS
+│   └── webfonts/          # FontAwesome webfonts
+├── templates/
+│   ├── header.php         # Shared nav (protected pages)
+│   └── footer.php         # Shared footer with DataTables init
+├── views/
+│   ├── auth/              # login, forgot_password, reset_password
+│   ├── user/              # index, create, edit
+│   └── index.php          # Dashboard view
+├── index.php              # Front controller — routes by ?page=
+├── .env.example           # Environment variable template
+└── database/schema.sql    # Source of truth for DB schema
+```
 
-1. Accede a `APP_URL/login.php` en tu navegador
-2. Inicia sesión con las credenciales del seed (usuario `Admin`)
-3. Los usuarios con `EsAdmin = 1` pueden acceder al módulo de gestión de usuarios en `model/usuario/`
-4. Para recuperar contraseña, usa el enlace "¿Olvidaste tu contraseña?" en el login
+## Usage
 
-## 🤝 Contribución
+1. Open `http://localhost/Encriptacion_PHP/` in your browser
+2. Log in with a seeded user (e.g. username `Admin`)
+3. Admin users (`is_admin = 1`) see the **Users** link in the nav → full CRUD
+4. To recover a password, click "Forgot your password?" on the login page
 
-Las contribuciones son bienvenidas. Para contribuir:
+## URL Routing
 
-1. Haz un Fork del proyecto
-2. Crea una nueva rama (`git checkout -b feature/AmazingFeature`)
-3. Realiza tus cambios
-4. Haz commit de tus cambios (`git commit -m 'Add some AmazingFeature'`)
-5. Haz Push a la rama (`git push origin feature/AmazingFeature`)
-6. Abre un Pull Request
+The app uses a single front controller (`index.php`) with a `?page=` query parameter:
 
-## 📝 Licencia
+| URL | Page |
+|-----|------|
+| `/` | Dashboard |
+| `/?page=login` | Login |
+| `/?page=forgot-password` | Forgot password |
+| `/?page=reset-password&token=...` | Reset password |
+| `/?page=users` | User list (admin only) |
+| `/?page=users/create` | Create user |
+| `/?page=users/edit&id=X` | Edit user |
 
-Este proyecto está bajo la Licencia MIT - mira el archivo `LICENSE` para más detalles.
+## Security
 
-## 📧 Contacto
+- Passwords hashed with bcrypt (`PASSWORD_DEFAULT`)
+- Session set only after successful `password_verify()`
+- Reset tokens: 256-bit, 1-hour expiry, single-use
+- All DB queries via MySQLi prepared statements
+- Email validated with `filter_var()` before DB lookup
+- SMTP with STARTTLS (port 587)
+
+## Contributing
+
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License — see the `LICENSE` file for details.
+
+## Contact
 
 Jandres25 - jandrespb4@gmail.com
 
-Link del proyecto: [https://github.com/Jandres25/Encriptacion_PHP](https://github.com/Jandres25/Encriptacion_PHP)
+Project link: [https://github.com/Jandres25/Encriptacion_PHP](https://github.com/Jandres25/Encriptacion_PHP)

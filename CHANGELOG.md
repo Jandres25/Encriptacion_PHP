@@ -1,33 +1,70 @@
 # Changelog
 
-Todos los cambios notables a este proyecto se documentan en este archivo.
+All notable changes to this project are documented in this file.
 
-El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
 ### Added
-- Directorio `config/` con separación de responsabilidades:
-  - `config/config.php` — carga `.env` con `loadEnv()` + `env()`, define constante `APP_URL` y `$url`
-  - `config/database.php` — conexión MySQLi usando `env()`
-  - `config/autoload.php` — punto de entrada único que incluye `database.php`
-- Variables de entorno `APP_URL` y `APP_TIMEZONE` en `.env` y `.env.example`
-- Campos `correo` (opcional) y `EsAdmin` (checkbox) en el formulario de crear usuario
-- Campos `correo` y `EsAdmin` pre-poblados en el formulario de editar usuario
-- Restricciones `UNIQUE` en columnas `correo` y `Usuario` de la tabla `usuario`
+- Front controller (`index.php`) routing all pages via `?page=` query parameter — no more scattered entry-point files at root
+- `controllers/auth/` — login, logout, reset, update_password (each handles GET + POST)
+- `controllers/user/` — index, create, edit, delete (admin-only CRUD)
+- `controllers/home.php` — dashboard controller
+- `model/User.php` — OOP model (`App\Model\User` namespace) with MySQLi prepared statements for all user operations
+- `database/schema.sql` — canonical DB schema with English table/column names (`users`, `password_resets`)
+- `database/seeds.sql` — sample data with bcrypt-hashed passwords
+- `public/` directory consolidating all static assets (CSS, JS, images, DataTables, webfonts)
+- `libs/PHPMailer/` — PHPMailer moved from `PHPMailer-master/` to `libs/`
+- `views/auth/` — login, forgot_password, reset_password (pure HTML, no logic)
+- `views/user/` — index, create, edit (pure HTML, no logic)
+- `views/index.php` — dashboard view
 
 ### Changed
-- `model/conexion.php` ahora delega a `config/autoload.php` para mantener compatibilidad con includes existentes
-- Todas las rutas de assets (CSS, JS, imágenes) en las vistas usan la constante `APP_URL` en lugar de rutas relativas frágiles
-- Todos los redirects en controladores usan `APP_URL` en lugar de rutas relativas (`../`, `./`)
-- CRUD de usuarios (`crear_usuario.php`, `editar_usuario.php`, `index.php`) convertido de interpolación de strings a MySQLi prepared statements
-- Al editar un usuario, dejar el campo contraseña vacío conserva la contraseña actual
-- `login.sql`: columnas `correo` y `EsAdmin` ahora tienen `DEFAULT ''` y `DEFAULT 0` respectivamente
+- Translated entire codebase to English: directories, filenames, PHP variables, session keys, HTML text, and DB schema
+- Session keys: `$_SESSION["ID"]` → `$_SESSION['user_id']`, `$_SESSION["Nombre"]` → `$_SESSION['name']`, `$_SESSION["EsAdmin"]` → `$_SESSION['is_admin']`
+- DB table `usuario` → `users`; columns `Nombres/Apellidos/correo/Usuario/Clave/EsAdmin` → `first_name/last_name/email/username/password/is_admin`
+- `$conexion` → `$connection` in `config/database.php`
+- PHPMailer reset link now points to `/?page=reset-password&token=...` instead of `reset_password.php?token=...`
+- `templates/header.php` no longer calls `session_start()` (front controller handles it); redirect updated to `/?page=login`
+- All form actions and nav links updated to use `/?page=...` URLs
 
 ### Fixed
-- **Email de recuperación no llegaba**: `controlador_reset.php` usaba `ENCRYPTION_SMTPS` (SSL/465) con el puerto 587 (STARTTLS) — corregido a `ENCRYPTION_STARTTLS`
-- **Vulnerabilidad de sesión en login**: las variables de sesión se asignaban antes de `password_verify()`, permitiendo acceso con contraseña incorrecta — ahora se asignan solo tras autenticación exitosa
-- **`reset_password.php` mostraba error PHP**: `$_GET['token']` se accedía sin `isset()`, causando `E_WARNING` en PHP 8 — corregido con operador `??`
-- **Crear usuario fallaba silenciosamente**: columnas `correo` y `EsAdmin` son `NOT NULL` sin default, y el INSERT no las incluía — resuelto con defaults en schema y campos en el formulario
-- **Mensaje de error incorrecto**: `model/usuario/index.php` mostraba `$_GET['mensaje']` en lugar de `$_GET['mensaje_error']` en la alerta de error de eliminación
-- **Falta `exit` tras redirects**: todos los `header('location:...')` en el módulo de usuarios ahora incluyen `exit` para detener la ejecución
+- SQL injection in login: replaced string interpolation with MySQLi prepared statement (via `User::getByUsername()`)
+- `window.location` JS redirects in password reset replaced with `header()` + `exit`
+- Bug in `update_password`: `$stmt->close()` was called on variables that didn't exist in the `else` branch — fixed by scoping `close()` inside each branch
+
+### Removed
+- `login.php`, `forgot_password.php`, `reset_password.php` from project root (logic moved to `controllers/auth/`, views to `views/auth/`)
+- `controlador/` directory (all Spanish legacy controllers)
+- `model/conexion.php` (replaced by `config/database.php` + `model/User.php`)
+- `model/usuario/` directory (replaced by `controllers/user/` + `views/user/` + `model/User.php`)
+- `login.sql` from project root (replaced by `database/schema.sql`)
+- `PHPMailer-master/` (moved to `libs/PHPMailer/`)
+- `css/`, `js/`, `img/`, `webfonts/`, `DataTables/` from root (moved to `public/`)
+
+---
+
+## [1.0.0] — Previous release
+
+### Added
+- `config/` directory with separation of concerns:
+  - `config/config.php` — loads `.env` with `loadEnv()` + `env()`, defines `APP_URL` and `$url`
+  - `config/database.php` — MySQLi connection using `env()`
+  - `config/autoload.php` — single bootstrap entry point
+- Environment variables `APP_URL` and `APP_TIMEZONE` in `.env` and `.env.example`
+- `email` and `is_admin` fields in create/edit user forms
+- UNIQUE constraints on `email` and `username` columns
+
+### Changed
+- All asset paths use `APP_URL` constant instead of fragile relative paths
+- All redirects in controllers use `APP_URL`
+- User CRUD converted to MySQLi prepared statements
+- Editing a user with a blank password field keeps the current password
+
+### Fixed
+- Password recovery email not sending: `ENCRYPTION_SMTPS` on port 587 corrected to `ENCRYPTION_STARTTLS`
+- Session security vulnerability: session variables now set only after successful `password_verify()`
+- `reset_password.php` PHP warning: `$_GET['token']` accessed without `isset()` — fixed with `??` operator
+- Silent failure on user creation: missing `email`/`is_admin` columns in INSERT
+- Missing `exit` after `header()` redirects in user module
