@@ -2,13 +2,13 @@
 
 require_once __DIR__ . '/config.php';
 
-$conexion = new mysqli(
+$connection = new mysqli(
     env('DB_HOST', 'localhost'),
     env('DB_USERNAME', 'root'),
     env('DB_PASSWORD', ''),
     env('DB_DATABASE')
 );
 
-if ($conexion->connect_error) {
-    die("Error de conexión a la base de datos: " . $conexion->connect_error);
+if ($connection->connect_error) {
+    die("Database connection error: " . $connection->connect_error);
 }
