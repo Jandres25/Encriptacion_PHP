@@ -2,17 +2,17 @@
 <footer>
     <!-- place footer here -->
     <div class="d-flex align-items-center justify-content-center bg-dark text-white" style="height: 60px;">
-        <b5>&copy; Derechos Reservados UPDS | <?php echo $year ?>
+        <b5>&copy; All Rights Reserved UPDS | <?php echo $year ?>
             <b5 />
     </div>
 </footer>
 
 <!-- Libraries -->
-<script src="<?= APP_URL ?>/js/jquery.min.js"></script>
-<script src="<?= APP_URL ?>/js/popper.min.js"></script>
-<script src="<?= APP_URL ?>/js/bootstrap.min.js"></script>
-<script src="<?= APP_URL ?>/js/fontawesome.js"></script>
-<script src="<?= APP_URL ?>/DataTables/datatables.js"></script>
+<script src="<?= APP_URL ?>/public/js/jquery.min.js"></script>
+<script src="<?= APP_URL ?>/public/js/popper.min.js"></script>
+<script src="<?= APP_URL ?>/public/js/bootstrap.min.js"></script>
+<script src="<?= APP_URL ?>/public/js/fontawesome.js"></script>
+<script src="<?= APP_URL ?>/public/DataTables/datatables.js"></script>
 
 <script>
     $(document).ready(function() {
@@ -22,30 +22,6 @@
                 [3, 5, 10, 25, 50],
                 [3, 5, 10, 25, 50]
             ],
-            "language": {
-                "sProcessing": "Procesando...",
-                "sLengthMenu": "Mostrar _MENU_ registros",
-                "sZeroRecords": "No se encontraron resultados",
-                "sEmptyTable": "Ningún dato disponible en esta tabla",
-                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
-                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-                "sInfoPostFix": "",
-                "sSearch": "Buscar:",
-                "sUrl": "",
-                "sInfoThousands": ",",
-                "sLoadingRecords": "Cargando...",
-                "oPaginate": {
-                    "sFirst": "Primero",
-                    "sLast": "Último",
-                    "sNext": "Siguiente",
-                    "sPrevious": "Anterior"
-                },
-                "oAria": {
-                    "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-                }
-            }
         });
     });
 </script>

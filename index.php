@@ -16,10 +16,10 @@ if (empty($_SESSION["ID"])) {
 <head>
 	<meta charset="UTF-8">
 	<title>Pagina Principal</title>
-	<link rel="stylesheet" href="<?= APP_URL ?>/css/estilo.css">
-	<link rel="stylesheet" href="<?= APP_URL ?>/css/bootstrap.css">
-	<link rel="stylesheet" href="<?= APP_URL ?>/css/fontawesome.min.css">
-	<link href="<?= APP_URL ?>/img/boton-de-inicio.png" rel="shortcut icon">
+	<link rel="stylesheet" href="<?= APP_URL ?>/public/css/estilo.css">
+	<link rel="stylesheet" href="<?= APP_URL ?>/public/css/bootstrap.css">
+	<link rel="stylesheet" href="<?= APP_URL ?>/public/css/fontawesome.min.css">
+	<link href="<?= APP_URL ?>/public/img/boton-de-inicio.png" rel="shortcut icon">
 </head>
 
 <body>
@@ -32,21 +32,21 @@ if (empty($_SESSION["ID"])) {
 			</ol>
 			<div class="carousel-inner">
 				<div class="carousel-item active" style="height: 100vh">
-					<img src="<?= APP_URL ?>/img/imagen1.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
+					<img src="<?= APP_URL ?>/public/img/imagen1.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
 					<div class="carousel-caption d-none d-md-block">
 						<h5 class="display-4 mb-4 font-weight-bold">BOOTSTRAP</h5>
 						<p>Nulla vitae elit libero, a pharetra augue mollis interdum.</p>
 					</div>
 				</div>
 				<div class="carousel-item" style="height: 100vh">
-					<img src="<?= APP_URL ?>/img/imagen2.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
+					<img src="<?= APP_URL ?>/public/img/imagen2.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
 					<div class="carousel-caption d-none d-md-block">
 						<h5 class="display-4 mb-4 font-weight-bold">BOOTSTRAP</h5>
 						<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
 					</div>
 				</div>
 				<div class="carousel-item" style="height: 100vh">
-					<img src="<?= APP_URL ?>/img/imagen3.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
+					<img src="<?= APP_URL ?>/public/img/imagen3.jpg" class="d-block w-100 h-100 img-fluid" alt="...">
 					<div class="carousel-caption d-none d-md-block">
 						<h5 class="display-4 mb-4 font-weight-bold">BOOTSTRAP</h5>
 						<p>Praesent commodo cursus magna, vel scelerisque nisl consectetur.</p>
@@ -119,10 +119,10 @@ if (empty($_SESSION["ID"])) {
 		</div>
 	</footer>
 
-	<script src="<?= APP_URL ?>/js/jquery-3.3.1.slim.min.js"></script>
-	<script src="<?= APP_URL ?>/js/popper.min.js"></script>
-	<script src="<?= APP_URL ?>/js/bootstrap.min.js"></script>
-	<script src="<?= APP_URL ?>/js/fontawesome.js"></script>
+	<script src="<?= APP_URL ?>/public/js/jquery-3.3.1.slim.min.js"></script>
+	<script src="<?= APP_URL ?>/public/js/popper.min.js"></script>
+	<script src="<?= APP_URL ?>/public/js/bootstrap.min.js"></script>
+	<script src="<?= APP_URL ?>/public/js/fontawesome.js"></script>
 </body>
 
 </html>
