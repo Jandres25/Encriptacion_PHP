@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] — 2026-03-22
+
+### Changed
+- Introduced `AuthController` (`controllers/auth/AuthController.php`, namespace `App\Controller\Auth`) with methods `login()`, `logout()`, `forgotPassword()`, `resetPassword()`
+- Introduced `UserController` (`controllers/user/UserController.php`, namespace `App\Controller\User`) with methods `index()`, `create()`, `edit()`, `delete()` and private guards `requireAuth()` / `requireAdmin()`
+- Individual action files (`login.php`, `reset.php`, etc.) are now thin delegators that instantiate the module controller and call the corresponding method — all logic lives in the controller class
+
+---
+
 ## [1.0.0] — 2026-03-20
 
 ### Added

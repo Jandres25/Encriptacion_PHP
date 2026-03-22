@@ -53,10 +53,11 @@ The `.env` file is loaded by `loadEnv()` in `config/config.php`, which also defi
 ### Request Flow
 
 ```
-Browser → index.php (front controller) → controllers/*.php → views/*.php
+Browser → index.php (front controller) → controllers/auth/*.php or controllers/user/*.php
+       → AuthController / UserController → views/*.php
 ```
 
-`index.php` reads `$_GET['page']` and dispatches to the matching controller. Each controller handles both GET (render view) and POST (process form), then includes its view or redirects.
+`index.php` reads `$_GET['page']` and dispatches to the matching thin delegator file. Each delegator instantiates the module's controller class and calls the corresponding method, which handles GET (render view) and POST (process form).
 
 ### URL Scheme
 
@@ -81,15 +82,17 @@ Browser → index.php (front controller) → controllers/*.php → views/*.php
 | `config/database.php` | Creates `$connection` MySQLi using `env()` helper |
 | `config/autoload.php` | Bootstrap entry point; includes `config.php` + `database.php` |
 | `model/User.php` | OOP model (`App\Model\User`); all DB queries via prepared statements |
-| `controllers/auth/login.php` | GET: show form. POST: verify credentials, set session |
-| `controllers/auth/logout.php` | Destroys session, redirects to login |
-| `controllers/auth/reset.php` | GET: show forgot-password form. POST: generate token, send PHPMailer email |
-| `controllers/auth/update_password.php` | GET: show reset form. POST: validate token, hash + save new password |
+| `controllers/auth/AuthController.php` | `App\Controller\Auth\AuthController` — all auth logic: `login()`, `logout()`, `forgotPassword()`, `resetPassword()` |
+| `controllers/auth/login.php` | Thin delegator → `AuthController::login()` |
+| `controllers/auth/logout.php` | Thin delegator → `AuthController::logout()` |
+| `controllers/auth/reset.php` | Thin delegator → `AuthController::forgotPassword()` |
+| `controllers/auth/update_password.php` | Thin delegator → `AuthController::resetPassword()` |
 | `controllers/home.php` | Auth check, sets `$name`/`$isAdmin`/`$year`, includes dashboard view |
-| `controllers/user/index.php` | Admin-only: fetches all users, includes user list view |
-| `controllers/user/create.php` | GET: show create form. POST: create user via `User::create()` |
-| `controllers/user/edit.php` | GET: fetch user + show edit form. POST: update user via `User::update()` |
-| `controllers/user/delete.php` | Deletes user by `?id=`, redirects to user list |
+| `controllers/user/UserController.php` | `App\Controller\User\UserController` — all user CRUD logic + `requireAuth()` / `requireAdmin()` guards |
+| `controllers/user/index.php` | Thin delegator → `UserController::index()` |
+| `controllers/user/create.php` | Thin delegator → `UserController::create()` |
+| `controllers/user/edit.php` | Thin delegator → `UserController::edit()` |
+| `controllers/user/delete.php` | Thin delegator → `UserController::delete()` |
 | `templates/header.php` / `templates/footer.php` | Shared nav/footer for protected pages (DataTables) |
 | `database/schema.sql` | Current DB schema — `users` + `password_resets` tables |
 | `database/seeds.sql` | Sample users with bcrypt-hashed passwords |
@@ -122,4 +125,5 @@ Set on login (only after successful `password_verify()`), required for all prote
 
 - PHPMailer is included directly from `libs/PHPMailer/src/` — not via Composer autoload
 - All asset paths (CSS, JS, images) use the `APP_URL` constant via `<?= APP_URL ?>` short-tag syntax
-- `use App\Model\User;` declarations in controllers are file-scoped and work correctly when `require`'d by the front controller
+- `AuthController` namespace is `App\Controller\Auth`; `UserController` namespace is `App\Controller\User`
+- `use App\Model\User;` inside controller classes is file-scoped and works correctly when the class file is `require_once`'d by the thin delegator

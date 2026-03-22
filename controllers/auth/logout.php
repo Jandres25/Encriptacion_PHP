@@ -1,6 +1,5 @@
 <?php
 
-session_destroy();
+require_once __DIR__ . '/AuthController.php';
 
-header('Location: ' . APP_URL . '/?page=login');
-exit;
+(new App\Controller\Auth\AuthController($connection))->logout();

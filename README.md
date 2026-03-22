@@ -1,9 +1,8 @@
-
 <div align="center">
 
 # Authentication and Password Recovery System
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.0.0)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.1.0)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
@@ -31,17 +30,20 @@ PHP web application implementing a secure authentication system with bcrypt pass
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/Jandres25/Encriptacion_PHP.git
 cd Encriptacion_PHP
 ```
 
 2. Copy and configure the environment file:
+
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` with your credentials:
+
 ```
 DB_HOST=localhost
 DB_USERNAME=root
@@ -58,11 +60,13 @@ APP_TIMEZONE=America/Bogota
 ```
 
 3. Import the database schema:
+
 ```bash
 mysql -u root -p < database/schema.sql
 ```
 
 4. (Optional) Load sample data:
+
 ```bash
 mysql -u root -p < database/seeds.sql
 ```
@@ -77,9 +81,19 @@ mysql -u root -p < database/seeds.sql
 │   ├── config.php         # Loads .env, defines APP_URL
 │   └── database.php       # MySQLi connection ($connection)
 ├── controllers/
-│   ├── auth/              # login, logout, reset, update_password
-│   ├── user/              # index, create, edit, delete
-│   └── home.php           # Dashboard controller
+│   ├── auth/
+│   │   ├── AuthController.php   # App\Controller\Auth\AuthController — all auth logic
+│   │   ├── login.php            # Thin delegator → AuthController::login()
+│   │   ├── logout.php           # Thin delegator → AuthController::logout()
+│   │   ├── reset.php            # Thin delegator → AuthController::forgotPassword()
+│   │   └── update_password.php  # Thin delegator → AuthController::resetPassword()
+│   ├── user/
+│   │   ├── UserController.php   # App\Controller\User\UserController — all user CRUD logic
+│   │   ├── index.php            # Thin delegator → UserController::index()
+│   │   ├── create.php           # Thin delegator → UserController::create()
+│   │   ├── edit.php             # Thin delegator → UserController::edit()
+│   │   └── delete.php           # Thin delegator → UserController::delete()
+│   └── home.php                 # Dashboard controller
 ├── database/
 │   ├── schema.sql         # Table definitions (users + password_resets)
 │   └── seeds.sql          # Sample data
@@ -116,15 +130,15 @@ mysql -u root -p < database/seeds.sql
 
 The app uses a single front controller (`index.php`) with a `?page=` query parameter:
 
-| URL | Page |
-|-----|------|
-| `/` | Dashboard |
-| `/?page=login` | Login |
-| `/?page=forgot-password` | Forgot password |
-| `/?page=reset-password&token=...` | Reset password |
-| `/?page=users` | User list (admin only) |
-| `/?page=users/create` | Create user |
-| `/?page=users/edit&id=X` | Edit user |
+| URL                               | Page                   |
+| --------------------------------- | ---------------------- |
+| `/`                               | Dashboard              |
+| `/?page=login`                    | Login                  |
+| `/?page=forgot-password`          | Forgot password        |
+| `/?page=reset-password&token=...` | Reset password         |
+| `/?page=users`                    | User list (admin only) |
+| `/?page=users/create`             | Create user            |
+| `/?page=users/edit&id=X`          | Edit user              |
 
 ## Security
 
