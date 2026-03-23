@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.1] — 2026-03-23
+
+### Fixed
+- Login POST check: changed `!empty($_POST['btningresar'])` to `isset()` — `<button>` without a `value` attribute submits an empty string, which `!empty()` rejects
+- Error and success messages now use session flash (`$_SESSION['flash_error']` / `$_SESSION['flash_message']`) instead of URL query params — messages disappear on page refresh and the URL stays clean
+- Flash message blocks moved inside `<form>` in all auth views so they render within the form's 360px width instead of beside it as flex siblings
+
+### Changed
+- `<input type="submit">` replaced with `<button type="submit">` in `login.php`, `forgot_password.php`, and `reset_password.php`
+- Added `.btn-anchor` class in `public/css/style.css` for `<a>` elements styled as buttons — provides `line-height: 40px` and `text-align: center` without affecting native `<button>` elements
+- Seed passwords corrected to known values: Admin/Luca/Martins/Gus → `123456`; Juan/Sofy/Mary → `0000`
+- Default admin credentials documented in `README.md` and `database/seeds.sql`
+
+---
+
 ## [1.2.0] — 2026-03-23
 
 ### Added

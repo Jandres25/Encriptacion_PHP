@@ -29,7 +29,7 @@ class AuthController
             exit;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['btningresar'])) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btningresar'])) {
             if (!empty($_POST['usuario']) && !empty($_POST['password'])) {
                 $user = $this->userModel->getByUsername($_POST['usuario']);
 
@@ -41,11 +41,13 @@ class AuthController
                     exit;
                 }
 
-                header('Location: ' . APP_URL . '/?page=login&error=' . urlencode('Incorrect username or password'));
+                $_SESSION['flash_error'] = 'Incorrect username or password';
+                header('Location: ' . APP_URL . '/?page=login');
                 exit;
             }
 
-            header('Location: ' . APP_URL . '/?page=login&error=' . urlencode('Please fill in all fields'));
+            $_SESSION['flash_error'] = 'Please fill in all fields';
+            header('Location: ' . APP_URL . '/?page=login');
             exit;
         }
 
@@ -75,7 +77,8 @@ class AuthController
             $user  = $this->userModel->getByEmail($email);
 
             if (!$user) {
-                header('Location: ' . APP_URL . '/?page=forgot-password&error=' . urlencode('Email not registered in the system'));
+                $_SESSION['flash_error'] = 'Email not registered in the system';
+                header('Location: ' . APP_URL . '/?page=forgot-password');
                 exit;
             }
 
@@ -148,10 +151,12 @@ class AuthController
                     </html>";
 
                 $mail->send();
-                header('Location: ' . APP_URL . '/?message=' . urlencode('A recovery link has been sent to your email'));
+                $_SESSION['flash_message'] = 'A recovery link has been sent to your email';
+                header('Location: ' . APP_URL . '/');
                 exit;
             } catch (Exception $e) {
-                header('Location: ' . APP_URL . '/?page=forgot-password&error=' . urlencode('Failed to send email: ' . $mail->ErrorInfo));
+                $_SESSION['flash_error'] = 'Failed to send email: ' . $mail->ErrorInfo;
+                header('Location: ' . APP_URL . '/?page=forgot-password');
                 exit;
             }
         }
@@ -167,7 +172,8 @@ class AuthController
             $confirmPassword = $_POST['confirm_password'];
 
             if ($newPassword !== $confirmPassword) {
-                header('Location: ' . APP_URL . '/?page=reset-password&token=' . urlencode($token) . '&error=' . urlencode('Passwords do not match'));
+                $_SESSION['flash_error'] = 'Passwords do not match';
+                header('Location: ' . APP_URL . '/?page=reset-password&token=' . urlencode($token));
                 exit;
             }
 
@@ -189,11 +195,13 @@ class AuthController
                 $stmtMark->execute();
                 $stmtMark->close();
 
-                header('Location: ' . APP_URL . '/?page=login&message=' . urlencode('Password updated successfully'));
+                $_SESSION['flash_message'] = 'Password updated successfully';
+                header('Location: ' . APP_URL . '/?page=login');
                 exit;
             }
 
-            header('Location: ' . APP_URL . '/?page=reset-password&token=' . urlencode($token) . '&error=' . urlencode('Invalid or expired token'));
+            $_SESSION['flash_error'] = 'Invalid or expired token';
+            header('Location: ' . APP_URL . '/?page=reset-password&token=' . urlencode($token));
             exit;
         }
 

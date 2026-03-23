@@ -195,6 +195,11 @@ a:hover {
 	transition: .5s;
 }
 
+.btn-anchor {
+	line-height: 40px;
+	text-align: center;
+}
+
 .btn:hover {
 	background-position: right;
 	background: #142e3d;

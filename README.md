@@ -2,7 +2,7 @@
 
 # Authentication and Password Recovery System
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.2.0)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.2.1)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
@@ -124,7 +124,7 @@ mysql -u root -p < database/seeds.sql
 ## Usage
 
 1. Open `http://localhost/Encriptacion_PHP/` in your browser
-2. Log in with a seeded user (e.g. username `Admin`)
+2. Log in with a seeded user (e.g. username `Admin`, password `123456`)
 3. Admin users (`is_admin = 1`) see the **Users** link in the nav → full CRUD
 4. To recover a password, click "Forgot your password?" on the login page
 

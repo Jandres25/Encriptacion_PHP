@@ -19,15 +19,27 @@
     <div class="container d-flex justify-content-center align-items-center">
         <img class="wave" src="<?= APP_URL ?>/public/img/wave.png">
         <div class="login-content">
-            <?php if (!empty($_GET['error'])): ?>
-                <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
-            <?php endif; ?>
-            <?php if (!empty($_GET['message'])): ?>
-                <div class="alert alert-success"><?= htmlspecialchars($_GET['message']) ?></div>
-            <?php endif; ?>
             <form method="post" action="<?= APP_URL ?>/?page=login">
                 <img src="<?= APP_URL ?>/public/img/avatar.svg">
                 <h2 class="title">WELCOME</h2>
+                <?php if (!empty($_SESSION['flash_error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($_SESSION['flash_error']) ?>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <?php unset($_SESSION['flash_error']); ?>
+                <?php endif; ?>
+                <?php if (!empty($_SESSION['flash_message'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($_SESSION['flash_message']) ?>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <?php unset($_SESSION['flash_message']); ?>
+                <?php endif; ?>
                 <div class="input-div one">
                     <div class="i"><i class="fas fa-user"></i></div>
                     <div class="div">
@@ -46,7 +58,7 @@
                     <div class="fas fa-eye verPassword" onclick="vista()" id="verPassword"></div>
                 </div>
                 <a href="<?= APP_URL ?>/?page=forgot-password" class="forgot-password mt-3">Forgot your password?</a>
-                <input name="btningresar" class="btn mt-5" type="submit" value="LOG IN">
+                <button name="btningresar" class="btn mt-5" type="submit">LOG IN</button>
             </form>
         </div>
     </div>

@@ -158,3 +158,6 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 - `AuthController` namespace is `App\Controller\Auth`; `UserController` namespace is `App\Controller\User`
 - `use App\Model\User;` inside controller classes is file-scoped and works correctly when the class file is `require_once`'d by the thin delegator
 - `views/index.php` uses `class="dashboard"` on `<body>` to activate the flex column layout defined in `estilo.css`
+- Error/success messages use session flash: `$_SESSION['flash_error']` and `$_SESSION['flash_message']`. Set before redirect, unset after rendering in the view. Never pass them via URL query params
+- Auth views use `<button type="submit">` (not `<input type="submit">`); POST detection uses `isset($_POST['btnXXX'])` — not `!empty()` — since `<button>` without a `value` attribute submits an empty string
+- `.btn-anchor` in `public/css/style.css` — apply alongside `.btn` on `<a>` elements for correct vertical centering; do not rely on the `a.btn` selector

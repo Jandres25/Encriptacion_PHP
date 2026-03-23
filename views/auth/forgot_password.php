@@ -19,12 +19,18 @@
     <div class="container d-flex justify-content-center align-items-center">
         <img class="wave" src="<?= APP_URL ?>/public/img/wave.png">
         <div class="login-content">
-            <?php if (!empty($_GET['error'])): ?>
-                <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
-            <?php endif; ?>
             <form method="post" action="<?= APP_URL ?>/?page=forgot-password">
                 <img src="<?= APP_URL ?>/public/img/avatar.svg">
                 <h2 class="title">Forgot Password</h2>
+                <?php if (!empty($_SESSION['flash_error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($_SESSION['flash_error']) ?>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <?php unset($_SESSION['flash_error']); ?>
+                <?php endif; ?>
                 <div class="input-div one">
                     <div class="i"><i class="fas fa-lock"></i></div>
                     <div class="div">
@@ -32,8 +38,8 @@
                         <input type="email" class="input" name="email" required>
                     </div>
                 </div>
-                <input name="btnrecuperar" class="btn mt-5" type="submit" value="SEND LINK">
-                <a href="<?= APP_URL ?>/?page=login" class="btn mt-3">Back to Login</a>
+                <button name="btnrecuperar" class="btn mt-5" type="submit">SEND LINK</button>
+                <a href="<?= APP_URL ?>/?page=login" class="btn btn-anchor">Back to Login</a>
             </form>
         </div>
     </div>
