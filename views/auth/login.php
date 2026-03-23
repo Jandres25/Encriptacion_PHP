@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="<?= APP_URL ?>/public/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= APP_URL ?>/public/css/all.min.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/fontawesome.min.css">
     <link href="<?= APP_URL ?>/public/img/candado.png" rel="shortcut icon">
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -53,11 +52,9 @@
     </div>
 
     <script src="<?= APP_URL ?>/public/js/popper.min.js"></script>
-    <script src="<?= APP_URL ?>/public/js/bootstrap.bundle.js"></script>
-    <script src="<?= APP_URL ?>/public/js/bootstrap.js"></script>
+    <script src="<?= APP_URL ?>/public/js/bootstrap.min.js"></script>
     <script src="<?= APP_URL ?>/public/js/main.js"></script>
     <script src="<?= APP_URL ?>/public/js/main2.js"></script>
-    <script src="<?= APP_URL ?>/public/js/fontawesome.js"></script>
 </body>
 
 </html>

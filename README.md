@@ -2,7 +2,7 @@
 
 # Authentication and Password Recovery System
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.1.0)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.2.0)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
@@ -17,8 +17,10 @@ PHP web application implementing a secure authentication system with bcrypt pass
 - Password recovery via email with expiring single-use tokens
 - Admin user management (create, edit, delete)
 - Front controller architecture with clean URL routing
+- OOP controllers (`AuthController`, `UserController`) with thin delegator pattern
 - OOP model layer with MySQLi prepared statements
 - PHPMailer integration for transactional email (STARTTLS)
+- Consistent color palette via CSS variables (`--color-dark`, `--color-accent`)
 
 ## Requirements
 
@@ -102,11 +104,11 @@ mysql -u root -p < database/seeds.sql
 ├── model/
 │   └── User.php           # App\Model\User — OOP model with prepared statements
 ├── public/
-│   ├── css/               # Bootstrap, FontAwesome, custom styles
-│   ├── DataTables/        # DataTables library
+│   ├── css/               # Bootstrap, all.min.css (FontAwesome), estilo.css (CSS vars + palette)
+│   ├── DataTables/        # DataTables combined bundle (datatables.js)
 │   ├── img/               # Images and icons
-│   ├── js/                # jQuery, Bootstrap JS, FontAwesome JS
-│   └── webfonts/          # FontAwesome webfonts
+│   ├── js/                # jQuery, Bootstrap JS, Popper
+│   └── webfonts/          # FontAwesome webfonts (used by all.min.css)
 ├── templates/
 │   ├── header.php         # Shared nav (protected pages)
 │   └── footer.php         # Shared footer with DataTables init

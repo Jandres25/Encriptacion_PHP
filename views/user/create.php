@@ -6,12 +6,12 @@
     </div>
 <?php endif; ?>
 
-<section class="container m-auto">
-    <h2>Create User</h2>
-    <div class="card">
-        <div class="card-header">User Details</div>
-        <div class="card-body">
-            <form action="<?= APP_URL ?>/?page=users/create" method="post">
+<section class="container mb-3" style="max-width: 720px;">
+    <h2 class="mb-3"><i class="fas fa-user-plus mr-2"></i>Create User</h2>
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">User Details</div>
+        <form action="<?= APP_URL ?>/?page=users/create" method="post">
+            <div class="card-body">
                 <div class="mb-3">
                     <label for="first_name" class="form-label">First Name</label>
                     <div class="input-group">
@@ -19,7 +19,7 @@
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
                         <input type="text" class="form-control" name="first_name" id="first_name"
-                               placeholder="e.g. John" required>
+                            placeholder="e.g. John" required>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -29,7 +29,7 @@
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
                         <input type="text" class="form-control" name="last_name" id="last_name"
-                               placeholder="e.g. Doe" required>
+                            placeholder="e.g. Doe" required>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -39,7 +39,7 @@
                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         </div>
                         <input type="email" class="form-control" name="email" id="email"
-                               placeholder="e.g. john@gmail.com">
+                            placeholder="e.g. john@gmail.com">
                     </div>
                     <small class="form-text text-muted">Required for password recovery</small>
                 </div>
@@ -50,7 +50,7 @@
                             <span class="input-group-text"><i class="fas fa-user"></i></span>
                         </div>
                         <input type="text" class="form-control" name="username" id="username"
-                               placeholder="e.g. john10" required>
+                            placeholder="e.g. john10" required>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -60,24 +60,30 @@
                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                         </div>
                         <input type="password" class="form-control" name="password" id="password"
-                               placeholder="Password" required>
+                            placeholder="Password" required>
                     </div>
                 </div>
-                <div class="mb-3 form-check">
+                <div class="form-check">
                     <input type="checkbox" class="form-check-input" name="is_admin" id="is_admin" value="1">
                     <label class="form-check-label" for="is_admin">Administrator</label>
                 </div>
-                <div class="mt-2">
-                    <button type="submit" name="add_user" class="btn btn-outline-success mr-1">
-                        <i class="fas fa-user-plus"></i> Add User
-                    </button>
-                    <a class="btn btn-outline-primary" href="<?= APP_URL ?>/?page=users" role="button">
-                        <i class="fas fa-undo"></i> Cancel
-                    </a>
+            </div>
+
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-12 col-sm-auto mb-2 mb-sm-0">
+                        <button type="submit" name="add_user" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-user-plus"></i> Add User
+                        </button>
+                    </div>
+                    <div class="col-12 col-sm-auto">
+                        <a class="btn btn-outline-secondary w-100" href="<?= APP_URL ?>/?page=users" role="button">
+                            <i class="fas fa-undo"></i> Cancel
+                        </a>
+                    </div>
                 </div>
-            </form>
-        </div>
-        <div class="card-footer text-muted"></div>
+            </div>
+        </form>
     </div>
 </section>
 

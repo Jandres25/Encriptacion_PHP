@@ -1,8 +1,7 @@
 </main>
 <footer>
     <div class="d-flex align-items-center justify-content-center bg-dark text-white" style="height: 60px;">
-        <b5>&copy; All Rights Reserved UPDS | <?php echo $year ?>
-            <b5 />
+        <span>&copy; <?= $year; ?> All Rights Reserved — UPDS</span>
     </div>
 </footer>
 
@@ -10,7 +9,6 @@
 <script src="<?= APP_URL ?>/public/js/jquery.min.js"></script>
 <script src="<?= APP_URL ?>/public/js/popper.min.js"></script>
 <script src="<?= APP_URL ?>/public/js/bootstrap.min.js"></script>
-<script src="<?= APP_URL ?>/public/js/fontawesome.js"></script>
 <script src="<?= APP_URL ?>/public/DataTables/datatables.js"></script>
 
 <script>
@@ -45,6 +43,9 @@
                         next: 'Next',
                         previous: 'Previous'
                     }
+                },
+                initComplete: function() {
+                    $(this.api().table().node()).css('visibility', 'visible');
                 }
             });
         }

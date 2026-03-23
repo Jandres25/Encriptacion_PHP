@@ -18,16 +18,17 @@
 <?php endif; ?>
 
 <section class="container-fluid mb-3">
-    <h2>User List</h2>
-    <div class="card">
-        <div class="card-header">
-            <a class="btn btn-outline-primary" href="<?= APP_URL ?>/?page=users/create" role="button">
-                <i class="fas fa-user-plus"></i> Add User
+    <h2 class="mb-3"><i class="fas fa-users mr-2"></i>User List</h2>
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-list mr-1"></i> All Users</span>
+            <a class="btn btn-sm btn-light" href="<?= APP_URL ?>/?page=users/create" role="button">
+                <i class="fas fa-user-plus mr-1"></i> Add User
             </a>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover" id="tabla_id">
+                <table class="table table-hover table-bordered table-striped" id="tabla_id" style="visibility: hidden;">
                     <thead class="bg-dark text-white">
                         <tr>
                             <th>ID</th>
@@ -42,27 +43,29 @@
                     <tbody>
                         <?php foreach ($users as $user): ?>
                             <tr>
-                                <td><?= $user['id'] ?></td>
+                                <td class="text-center"><?= $user['id'] ?></td>
                                 <td><?= htmlspecialchars($user['first_name']) ?></td>
                                 <td><?= htmlspecialchars($user['last_name']) ?></td>
                                 <td><?= htmlspecialchars($user['username']) ?></td>
                                 <td><?= htmlspecialchars($user['email']) ?></td>
-                                <td>
+                                <td class="text-center">
                                     <?php if ($user['is_admin']): ?>
-                                        <span class="badge badge-success">Yes</span>
+                                        <span class="badge badge-success badge-pill p-2">Yes</span>
                                     <?php else: ?>
-                                        <span class="badge badge-secondary">No</span>
+                                        <span class="badge badge-secondary badge-pill p-2">No</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
-                                    <a class="btn btn-sm btn-outline-secondary mr-1"
-                                       href="<?= APP_URL ?>/?page=users/edit&id=<?= $user['id'] ?>" role="button">
-                                        <i class="fas fa-user-edit"></i> Edit
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                    <div class="btn-group">
+                                        <a class="btn btn-sm btn-outline-success"
+                                            href="<?= APP_URL ?>/?page=users/edit&id=<?= $user['id'] ?>" role="button">
+                                            <i class="fas fa-user-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
                                             data-toggle="modal" data-target="#deleteModal<?= $user['id'] ?>">
-                                        <i class="fas fa-user-minus"></i> Delete
-                                    </button>
+                                            <i class="fas fa-user-minus"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -78,7 +81,7 @@
     <div class="modal fade" id="deleteModal<?= $user['id'] ?>" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title">Delete User</h5>
                     <button type="button" class="close" data-dismiss="modal">
                         <span>&times;</span>
@@ -90,9 +93,13 @@
                     <p><strong>Username:</strong> <?= htmlspecialchars($user['username']) ?></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
                     <a href="<?= APP_URL ?>/?page=users/delete&id=<?= $user['id'] ?>"
-                       class="btn btn-danger">Delete</a>
+                        class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
                 </div>
             </div>
         </div>

@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.0] — 2026-03-23
+
+### Added
+- CSS variables `--color-dark` (`#142e3d`) and `--color-accent` (`#04a1fc`) in `public/css/estilo.css` for a consistent color palette across all views
+- Utility classes in `estilo.css`: `.btn-app-primary`, `.hero`, `.feature-icon`, `body.dashboard`
+
+### Changed
+- Dashboard (`views/index.php`) redesigned: replaced carousel and placeholder content with a hero section and three feature cards describing the project's security capabilities
+- Hero gradient simplified to use only palette tokens (`--color-dark` → `--color-accent`), eliminating the off-palette intermediate color
+- Navbar and card headers now render in navy `#142e3d` instead of Bootstrap's default `#343a40` via CSS override
+- Body background changed from `rgb(218,216,216)` to `#f8f9fa` (Bootstrap light gray)
+- FontAwesome migrated from SVG/JS bundle (`fontawesome.js`) to CSS + webfonts (`all.min.css`)
+- Dashboard inline `<style>` block extracted to `estilo.css`; `<body>` gets `class="dashboard"` to scope the flex layout
+
+### Removed
+- Unused public assets: `public/css/fontawesome.min.css`, `public/js/fontawesome.js`, `public/js/bootstrap.bundle.js`, `public/js/bootstrap.js`, `public/DataTables/datatables.min.css`, `public/DataTables/datatables.min.js`, `public/img/1.jpg`, `public/img/bg.svg`
+
+---
+
 ## [1.1.0] — 2026-03-22
 
 ### Changed
