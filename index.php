@@ -4,7 +4,21 @@ require_once __DIR__ . '/config/autoload.php';
 
 session_start();
 
-$page = $_GET['page'] ?? 'home';
+$page = $_GET['page'] ?? null;
+
+if ($page === null) {
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    $requestPath = trim($requestPath, '/');
+
+    $appPath = parse_url(APP_URL, PHP_URL_PATH) ?? '';
+    $appPath = trim($appPath, '/');
+
+    if ($appPath !== '' && str_starts_with($requestPath, $appPath)) {
+        $requestPath = trim(substr($requestPath, strlen($appPath)), '/');
+    }
+
+    $page = ($requestPath === '' || $requestPath === 'index.php') ? 'home' : $requestPath;
+}
 
 $routes = [
     'login'           => __DIR__ . '/controllers/auth/login.php',

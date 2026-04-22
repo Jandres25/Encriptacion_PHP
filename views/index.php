@@ -29,7 +29,7 @@
                 </li>
                 <?php if ($isAdmin): ?>
                 <li class="nav-item">
-                    <a class="nav-link ml-2" href="<?= APP_URL ?>/?page=users">
+                    <a class="nav-link ml-2" href="<?= APP_URL ?>/users">
                         <i class="fas fa-users mr-1"></i> Users
                     </a>
                 </li>
@@ -42,7 +42,7 @@
                     </span>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-danger" href="<?= APP_URL ?>/?page=logout">
+                    <a class="nav-link text-danger" href="<?= APP_URL ?>/logout">
                         <i class="fas fa-sign-out-alt mr-1"></i> Logout
                     </a>
                 </li>
@@ -63,7 +63,7 @@
                     and email-based password recovery.
                 </p>
                 <?php if ($isAdmin): ?>
-                <a href="<?= APP_URL ?>/?page=users" class="btn btn-app-primary btn-lg px-4">
+                <a href="<?= APP_URL ?>/users" class="btn btn-app-primary btn-lg px-4">
                     <i class="fas fa-users mr-2"></i> Manage Users
                 </a>
                 <?php endif; ?>

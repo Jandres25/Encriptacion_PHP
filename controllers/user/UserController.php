@@ -18,7 +18,7 @@ class UserController
     private function requireAuth(): void
     {
         if (empty($_SESSION['user_id'])) {
-            header('Location: ' . APP_URL . '/?page=login');
+            header('Location: ' . APP_URL . '/login');
             exit;
         }
     }
@@ -36,17 +36,20 @@ class UserController
     {
         $this->requireAdmin();
 
-        $year  = date('Y');
-        $users = $this->userModel->getAll();
+        $users   = $this->userModel->getAll();
+        $message = $_GET['message'] ?? '';
+        $error   = $_GET['error'] ?? '';
 
-        include __DIR__ . '/../../views/user/index.php';
+        renderProtectedView('user/index.php', [
+            'users' => $users,
+            'message' => $message,
+            'error' => $error,
+        ]);
     }
 
     public function create(): void
     {
         $this->requireAdmin();
-
-        $year = date('Y');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
             $data = [
@@ -59,21 +62,21 @@ class UserController
             ];
 
             if ($this->userModel->create($data)) {
-                header('Location: ' . APP_URL . '/?page=users&message=' . urlencode('User added successfully'));
+                header('Location: ' . APP_URL . '/users?message=' . urlencode('User added successfully'));
             } else {
-                header('Location: ' . APP_URL . '/?page=users/create&error=' . urlencode('Failed to create user'));
+                header('Location: ' . APP_URL . '/users/create?error=' . urlencode('Failed to create user'));
             }
             exit;
         }
 
-        include __DIR__ . '/../../views/user/create.php';
+        renderProtectedView('user/create.php', [
+            'error' => $_GET['error'] ?? '',
+        ]);
     }
 
     public function edit(): void
     {
         $this->requireAdmin();
-
-        $year = date('Y');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
             $id   = (int) $_POST['id'];
@@ -87,9 +90,9 @@ class UserController
             ];
 
             if ($this->userModel->update($id, $data)) {
-                header('Location: ' . APP_URL . '/?page=users&message=' . urlencode('User updated successfully'));
+                header('Location: ' . APP_URL . '/users?message=' . urlencode('User updated successfully'));
             } else {
-                header('Location: ' . APP_URL . '/?page=users/edit&id=' . $id . '&error=' . urlencode('Failed to update user'));
+                header('Location: ' . APP_URL . '/users/edit?id=' . $id . '&error=' . urlencode('Failed to update user'));
             }
             exit;
         }
@@ -98,11 +101,14 @@ class UserController
         $user = $this->userModel->getById($id);
 
         if (!$user) {
-            header('Location: ' . APP_URL . '/?page=users&error=' . urlencode('User not found'));
+            header('Location: ' . APP_URL . '/users?error=' . urlencode('User not found'));
             exit;
         }
 
-        include __DIR__ . '/../../views/user/edit.php';
+        renderProtectedView('user/edit.php', [
+            'user' => $user,
+            'error' => $_GET['error'] ?? '',
+        ]);
     }
 
     public function delete(): void
@@ -113,14 +119,14 @@ class UserController
             $id = (int) $_GET['id'];
 
             if ($this->userModel->delete($id)) {
-                header('Location: ' . APP_URL . '/?page=users&message=' . urlencode('User deleted successfully'));
+                header('Location: ' . APP_URL . '/users?message=' . urlencode('User deleted successfully'));
             } else {
-                header('Location: ' . APP_URL . '/?page=users&error=' . urlencode('Failed to delete user'));
+                header('Location: ' . APP_URL . '/users?error=' . urlencode('Failed to delete user'));
             }
             exit;
         }
 
-        header('Location: ' . APP_URL . '/?page=users');
+        header('Location: ' . APP_URL . '/users');
         exit;
     }
 }

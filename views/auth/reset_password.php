@@ -19,7 +19,7 @@
     <div class="container d-flex justify-content-center align-items-center">
         <img class="wave" src="<?= APP_URL ?>/public/img/wave.png">
         <div class="login-content">
-            <form method="post" action="<?= APP_URL ?>/?page=reset-password">
+            <form method="post" action="<?= APP_URL ?>/reset-password">
                 <img src="<?= APP_URL ?>/public/img/avatar.svg">
                 <h2 class="title">New Password</h2>
                 <?php if (!empty($_SESSION['flash_error'])): ?>

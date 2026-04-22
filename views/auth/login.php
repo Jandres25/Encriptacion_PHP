@@ -19,7 +19,7 @@
     <div class="container d-flex justify-content-center align-items-center">
         <img class="wave" src="<?= APP_URL ?>/public/img/wave.png">
         <div class="login-content">
-            <form method="post" action="<?= APP_URL ?>/?page=login">
+            <form method="post" action="<?= APP_URL ?>/login">
                 <img src="<?= APP_URL ?>/public/img/avatar.svg">
                 <h2 class="title">WELCOME</h2>
                 <?php if (!empty($_SESSION['flash_error'])): ?>
@@ -57,7 +57,7 @@
                 <div class="view">
                     <div class="fas fa-eye verPassword" onclick="vista()" id="verPassword"></div>
                 </div>
-                <a href="<?= APP_URL ?>/?page=forgot-password" class="forgot-password mt-3">Forgot your password?</a>
+                <a href="<?= APP_URL ?>/forgot-password" class="forgot-password mt-3">Forgot your password?</a>
                 <button name="btningresar" class="btn mt-5" type="submit">LOG IN</button>
             </form>
         </div>

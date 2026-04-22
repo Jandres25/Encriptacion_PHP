@@ -1,16 +1,14 @@
-<?php include __DIR__ . '/../../templates/header.php'; ?>
-
-<?php if (!empty($_GET['message'])): ?>
+<?php if (!empty($message)): ?>
     <div class="alert alert-success alert-dismissible fade show text-center m-auto" style="max-width:50%;" role="alert">
-        <strong><?= htmlspecialchars($_GET['message']) ?></strong>
+        <strong><?= htmlspecialchars($message) ?></strong>
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
 <?php endif; ?>
-<?php if (!empty($_GET['error'])): ?>
+<?php if (!empty($error)): ?>
     <div class="alert alert-danger alert-dismissible fade show text-center m-auto" style="max-width:50%;" role="alert">
-        <strong><?= htmlspecialchars($_GET['error']) ?></strong>
+        <strong><?= htmlspecialchars($error) ?></strong>
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -22,7 +20,7 @@
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <span><i class="fas fa-list mr-1"></i> All Users</span>
-            <a class="btn btn-sm btn-light" href="<?= APP_URL ?>/?page=users/create" role="button">
+            <a class="btn btn-sm btn-light" href="<?= APP_URL ?>/users/create" role="button">
                 <i class="fas fa-user-plus mr-1"></i> Add User
             </a>
         </div>
@@ -58,7 +56,7 @@
                                 <td class="text-center">
                                     <div class="btn-group">
                                         <a class="btn btn-sm btn-outline-success"
-                                            href="<?= APP_URL ?>/?page=users/edit&id=<?= $user['id'] ?>" role="button">
+                                            href="<?= APP_URL ?>/users/edit?id=<?= $user['id'] ?>" role="button">
                                             <i class="fas fa-user-edit"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger"
@@ -96,7 +94,7 @@
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">
                         <i class="fas fa-times"></i> Cancel
                     </button>
-                    <a href="<?= APP_URL ?>/?page=users/delete&id=<?= $user['id'] ?>"
+                    <a href="<?= APP_URL ?>/users/delete?id=<?= $user['id'] ?>"
                         class="btn btn-danger">
                         <i class="fas fa-trash"></i> Delete
                     </a>
@@ -105,5 +103,3 @@
         </div>
     </div>
 <?php endforeach; ?>
-
-<?php include __DIR__ . '/../../templates/footer.php'; ?>

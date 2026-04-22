@@ -1,7 +1,7 @@
 <?php
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: ' . APP_URL . '/?page=login');
+    header('Location: ' . APP_URL . '/login');
     exit;
 }
 

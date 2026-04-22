@@ -42,12 +42,12 @@ class AuthController
                 }
 
                 $_SESSION['flash_error'] = 'Incorrect username or password';
-                header('Location: ' . APP_URL . '/?page=login');
+                header('Location: ' . APP_URL . '/login');
                 exit;
             }
 
             $_SESSION['flash_error'] = 'Please fill in all fields';
-            header('Location: ' . APP_URL . '/?page=login');
+            header('Location: ' . APP_URL . '/login');
             exit;
         }
 
@@ -57,7 +57,7 @@ class AuthController
     public function logout(): void
     {
         session_destroy();
-        header('Location: ' . APP_URL . '/?page=login');
+        header('Location: ' . APP_URL . '/login');
         exit;
     }
 
@@ -78,7 +78,7 @@ class AuthController
 
             if (!$user) {
                 $_SESSION['flash_error'] = 'Email not registered in the system';
-                header('Location: ' . APP_URL . '/?page=forgot-password');
+                header('Location: ' . APP_URL . '/forgot-password');
                 exit;
             }
 
@@ -108,7 +108,7 @@ class AuthController
                 $mail->setFrom($smtpUsername, 'Password Recovery');
                 $mail->addAddress($email);
 
-                $resetLink = APP_URL . '/?page=reset-password&token=' . $token;
+                $resetLink = APP_URL . '/reset-password?token=' . urlencode($token);
 
                 $mail->isHTML(true);
                 $mail->Subject = 'Password Recovery';
@@ -156,7 +156,7 @@ class AuthController
                 exit;
             } catch (Exception $e) {
                 $_SESSION['flash_error'] = 'Failed to send email: ' . $mail->ErrorInfo;
-                header('Location: ' . APP_URL . '/?page=forgot-password');
+                header('Location: ' . APP_URL . '/forgot-password');
                 exit;
             }
         }
@@ -173,7 +173,7 @@ class AuthController
 
             if ($newPassword !== $confirmPassword) {
                 $_SESSION['flash_error'] = 'Passwords do not match';
-                header('Location: ' . APP_URL . '/?page=reset-password&token=' . urlencode($token));
+                header('Location: ' . APP_URL . '/reset-password?token=' . urlencode($token));
                 exit;
             }
 
@@ -196,12 +196,12 @@ class AuthController
                 $stmtMark->close();
 
                 $_SESSION['flash_message'] = 'Password updated successfully';
-                header('Location: ' . APP_URL . '/?page=login');
+                header('Location: ' . APP_URL . '/login');
                 exit;
             }
 
             $_SESSION['flash_error'] = 'Invalid or expired token';
-            header('Location: ' . APP_URL . '/?page=reset-password&token=' . urlencode($token));
+            header('Location: ' . APP_URL . '/reset-password?token=' . urlencode($token));
             exit;
         }
 

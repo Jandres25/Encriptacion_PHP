@@ -1,15 +1,3 @@
-<?php
-require_once __DIR__ . '/../config/config.php';
-
-if (empty($_SESSION['user_id'])) {
-    header('Location: ' . APP_URL . '/?page=login');
-    exit;
-}
-
-$year = date('Y');
-
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,18 +13,7 @@ $year = date('Y');
     <link rel="stylesheet" href="<?= APP_URL ?>/public/css/all.min.css">
     <link href="<?= APP_URL ?>/public/img/usuario.png" rel="shortcut icon">
     <link href="<?= APP_URL ?>/public/DataTables/datatables.css" rel="stylesheet">
-
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        main {
-            flex-grow: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/layout-protected.css">
 </head>
 
 <body>
@@ -56,7 +33,7 @@ $year = date('Y');
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger" href="<?= APP_URL ?>/?page=logout">
+                        <a class="nav-link text-danger" href="<?= APP_URL ?>/logout">
                             <i class="fas fa-sign-out-alt mr-1"></i> Logout
                         </a>
                     </li>

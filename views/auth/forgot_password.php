@@ -19,7 +19,7 @@
     <div class="container d-flex justify-content-center align-items-center">
         <img class="wave" src="<?= APP_URL ?>/public/img/wave.png">
         <div class="login-content">
-            <form method="post" action="<?= APP_URL ?>/?page=forgot-password">
+            <form method="post" action="<?= APP_URL ?>/forgot-password">
                 <img src="<?= APP_URL ?>/public/img/avatar.svg">
                 <h2 class="title">Forgot Password</h2>
                 <?php if (!empty($_SESSION['flash_error'])): ?>
@@ -39,7 +39,7 @@
                     </div>
                 </div>
                 <button name="btnrecuperar" class="btn mt-5" type="submit">SEND LINK</button>
-                <a href="<?= APP_URL ?>/?page=login" class="btn btn-anchor">Back to Login</a>
+                <a href="<?= APP_URL ?>/login" class="btn btn-anchor">Back to Login</a>
             </form>
         </div>
     </div>

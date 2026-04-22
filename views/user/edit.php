@@ -1,8 +1,6 @@
-<?php include __DIR__ . '/../../templates/header.php'; ?>
-
-<?php if (!empty($_GET['error'])): ?>
+<?php if (!empty($error)): ?>
     <div class="alert alert-danger text-center m-auto" style="max-width:60%;">
-        <?= htmlspecialchars($_GET['error']) ?>
+        <?= htmlspecialchars($error) ?>
     </div>
 <?php endif; ?>
 
@@ -10,7 +8,7 @@
     <h2 class="mb-3"><i class="fas fa-user-edit mr-2"></i>Edit User</h2>
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">User Details</div>
-        <form action="<?= APP_URL ?>/?page=users/edit" method="post">
+        <form action="<?= APP_URL ?>/users/edit" method="post">
             <div class="card-body">
                 <input type="hidden" name="id" value="<?= $user['id'] ?>">
                 <div class="mb-3">
@@ -79,7 +77,7 @@
                         </button>
                     </div>
                     <div class="col-12 col-sm-auto">
-                        <a class="btn btn-outline-secondary w-100" href="<?= APP_URL ?>/?page=users" role="button">
+                        <a class="btn btn-outline-secondary w-100" href="<?= APP_URL ?>/users" role="button">
                             <i class="fas fa-undo"></i> Cancel
                         </a>
                     </div>
@@ -88,5 +86,3 @@
         </form>
     </div>
 </section>
-
-<?php include __DIR__ . '/../../templates/footer.php'; ?>
