@@ -1,1 +1,10 @@
 .env
+storage/cache/*.cache
+!storage/cache/.gitignore
+
+# Ignore all IDE files
+.idea/
+.vscode/
+vendor/
+node_modules/
+public/storage/

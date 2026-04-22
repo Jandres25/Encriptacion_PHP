@@ -6,16 +6,22 @@ use mysqli;
 
 class User
 {
+    private const CACHE_KEY_ALL_USERS = 'users.all';
+
     public function __construct(private mysqli $connection) {}
 
     public function getAll(): array
     {
-        $result = $this->connection->query("SELECT * FROM users");
-        $users = [];
-        while ($row = $result->fetch_assoc()) {
-            $users[] = $row;
-        }
-        return $users;
+        $ttl = (int) env('CACHE_TTL_USERS', 60);
+
+        return appCache()->remember(self::CACHE_KEY_ALL_USERS, $ttl, function (): array {
+            $result = $this->connection->query("SELECT * FROM users");
+            $users = [];
+            while ($row = $result->fetch_assoc()) {
+                $users[] = $row;
+            }
+            return $users;
+        });
     }
 
     public function getById(int $id): ?array
@@ -67,6 +73,9 @@ class User
         $stmt->execute();
         $success = $stmt->affected_rows > 0;
         $stmt->close();
+        if ($success) {
+            appCache()->forget(self::CACHE_KEY_ALL_USERS);
+        }
         return $success;
     }
 
@@ -96,6 +105,9 @@ class User
         $stmt->execute();
         $success = $stmt->affected_rows >= 0;
         $stmt->close();
+        if ($success) {
+            appCache()->forget(self::CACHE_KEY_ALL_USERS);
+        }
         return $success;
     }
 
@@ -106,6 +118,9 @@ class User
         $stmt->execute();
         $success = $stmt->affected_rows > 0;
         $stmt->close();
+        if ($success) {
+            appCache()->forget(self::CACHE_KEY_ALL_USERS);
+        }
         return $success;
     }
 
@@ -117,6 +132,9 @@ class User
         $stmt->execute();
         $success = $stmt->affected_rows > 0;
         $stmt->close();
+        if ($success) {
+            appCache()->forget(self::CACHE_KEY_ALL_USERS);
+        }
         return $success;
     }
 }
