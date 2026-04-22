@@ -4,6 +4,41 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.2] — 2026-04-22
+
+### Added
+- File-based cache infrastructure:
+  - `libs/Cache/FileCache.php` (get/set/forget/remember with TTL)
+  - `config/cache.php` (`appCache()` helper)
+  - `storage/cache/.gitignore` for runtime cache files
+- Environment settings for cache control:
+  - `CACHE_ENABLED`
+  - `CACHE_TTL_USERS`
+- Apache rewrite support for clean URLs via `.htaccess`
+- Shared rendering helpers in `config/view_helpers.php`:
+  - `renderView()`
+  - `renderProtectedView()`
+- New protected-layout assets:
+  - `public/css/layout-protected.css`
+  - `public/js/users-table.js`
+
+### Changed
+- `model/User.php` now caches `getAll()` user listing with key `users.all`
+- Cache invalidation added on user writes (`create`, `update`, `delete`, `updatePassword`)
+- `config/autoload.php` now loads cache bootstrap before DB usage
+- `.gitignore` updated to ignore runtime cache files (`storage/cache/*.cache`)
+- `index.php` route resolution prioritizes clean path-based URLs (fallback from `REQUEST_URI`) instead of relying only on `?page=`
+- Protected views now render through `renderProtectedView()` in `UserController` (centralized header/footer include)
+- Shared templates moved from project-root `templates/` to `views/templates/`
+- DataTables setup for users list moved from inline footer script to `public/js/users-table.js`
+
+### Fixed
+- Prevented HTTP 500 on `/users` when cache directory is not writable:
+  - cache now falls back to disabled mode for the request
+  - warning is logged instead of throwing a fatal runtime exception
+
+---
+
 ## [1.2.1] — 2026-03-23
 
 ### Fixed

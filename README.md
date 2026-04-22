@@ -2,7 +2,7 @@
 
 # Authentication and Password Recovery System
 
-[![Version](https://img.shields.io/badge/version-1.2.1-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.2.1)
+[![Version](https://img.shields.io/badge/version-1.2.2-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.2.2)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
@@ -19,8 +19,11 @@ PHP web application implementing a secure authentication system with bcrypt pass
 - Front controller architecture with clean URL routing
 - OOP controllers (`AuthController`, `UserController`) with thin delegator pattern
 - OOP model layer with MySQLi prepared statements
+- Shared view helpers (`renderView`, `renderProtectedView`) for consistent template rendering
 - PHPMailer integration for transactional email (STARTTLS)
 - Consistent color palette via CSS variables (`--color-dark`, `--color-accent`)
+- File-based cache for admin user listing with automatic invalidation on create/edit/delete
+- Graceful cache fallback: if `storage/cache` is not writable, the app continues without cache and logs a warning
 
 ## Requirements
 
@@ -59,7 +62,13 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP
 APP_TIMEZONE=America/Bogota
+
+CACHE_ENABLED=true
+CACHE_TTL_USERS=60
 ```
+
+`CACHE_TTL_USERS` defines (in seconds) how long the `/users` list stays cached.
+The `storage/cache` directory must be writable by your web server user.
 
 3. Import the database schema:
 
@@ -80,8 +89,10 @@ mysql -u root -p < database/seeds.sql
 ```
 ├── config/
 │   ├── autoload.php       # Bootstrap entry point
+│   ├── cache.php          # Cache bootstrap + appCache() helper
 │   ├── config.php         # Loads .env, defines APP_URL
-│   └── database.php       # MySQLi connection ($connection)
+│   ├── database.php       # MySQLi connection ($connection)
+│   └── view_helpers.php   # renderView() / renderProtectedView()
 ├── controllers/
 │   ├── auth/
 │   │   ├── AuthController.php   # App\Controller\Auth\AuthController — all auth logic
@@ -100,23 +111,25 @@ mysql -u root -p < database/seeds.sql
 │   ├── schema.sql         # Table definitions (users + password_resets)
 │   └── seeds.sql          # Sample data
 ├── libs/
+│   ├── Cache/             # File-based cache implementation
 │   └── PHPMailer/         # PHPMailer (no Composer)
 ├── model/
 │   └── User.php           # App\Model\User — OOP model with prepared statements
 ├── public/
-│   ├── css/               # Bootstrap, all.min.css (FontAwesome), estilo.css (CSS vars + palette)
+│   ├── css/               # Bootstrap, all.min.css (FontAwesome), estilo.css, layout-protected.css
 │   ├── DataTables/        # DataTables combined bundle (datatables.js)
 │   ├── img/               # Images and icons
-│   ├── js/                # jQuery, Bootstrap JS, Popper
+│   ├── js/                # jQuery, Bootstrap JS, Popper, users-table.js
 │   └── webfonts/          # FontAwesome webfonts (used by all.min.css)
-├── templates/
-│   ├── header.php         # Shared nav (protected pages)
-│   └── footer.php         # Shared footer with DataTables init
+├── storage/
+│   └── cache/             # Runtime cache files (*.cache)
 ├── views/
 │   ├── auth/              # login, forgot_password, reset_password
+│   ├── templates/         # shared header/footer for protected pages
 │   ├── user/              # index, create, edit
 │   └── index.php          # Dashboard view
-├── index.php              # Front controller — routes by ?page=
+├── index.php              # Front controller — routes by path (/login, /users, ...)
+├── .htaccess              # Apache rewrite rules for clean URLs
 ├── .env.example           # Environment variable template
 └── database/schema.sql    # Source of truth for DB schema
 ```
@@ -130,17 +143,18 @@ mysql -u root -p < database/seeds.sql
 
 ## URL Routing
 
-The app uses a single front controller (`index.php`) with a `?page=` query parameter:
+The app uses a single front controller (`index.php`) with clean URL paths:
 
 | URL                               | Page                   |
 | --------------------------------- | ---------------------- |
 | `/`                               | Dashboard              |
-| `/?page=login`                    | Login                  |
-| `/?page=forgot-password`          | Forgot password        |
-| `/?page=reset-password&token=...` | Reset password         |
-| `/?page=users`                    | User list (admin only) |
-| `/?page=users/create`             | Create user            |
-| `/?page=users/edit&id=X`          | Edit user              |
+| `/login`                          | Login                  |
+| `/forgot-password`                | Forgot password        |
+| `/reset-password?token=...`       | Reset password         |
+| `/users`                          | User list (admin only) |
+| `/users/create`                   | Create user            |
+| `/users/edit?id=X`                | Edit user              |
+| `/users/delete?id=X`              | Delete user            |
 
 ## Security
 
@@ -150,6 +164,31 @@ The app uses a single front controller (`index.php`) with a `?page=` query param
 - All DB queries via MySQLi prepared statements
 - Email validated with `filter_var()` before DB lookup
 - SMTP with STARTTLS (port 587)
+
+## Cache
+
+- Cached endpoint: `/users` user listing (`App\Model\User::getAll()`)
+- Cache key: fixed key (`users.all`), so requests rewrite the same cache file instead of creating unlimited files
+- Invalidation: cache is cleared after create, edit, delete, and password update operations
+- Controls:
+  - `CACHE_ENABLED=true|false`
+  - `CACHE_TTL_USERS=<seconds>` (e.g., `600` for 10 minutes)
+- Storage: `storage/cache/*.cache`
+- If the directory is not writable, the app disables cache for the request and logs a warning (no HTTP 500)
+
+### How to verify cache performance
+
+1. Open Firefox DevTools (`F12`) → **Red** tab.
+2. Open `/users` and note the request **Duración**.
+3. Reload several times within TTL: the first request is usually slower; the next ones should be faster.
+4. Set `CACHE_ENABLED=false`, reload again, and compare durations.
+
+## Rendering and Layout
+
+- Protected pages use `renderProtectedView()` from `config/view_helpers.php`.
+- Shared protected layout lives in `views/templates/header.php` and `views/templates/footer.php`.
+- DataTables initialization for the users table was moved to `public/js/users-table.js`.
+- Full-height protected layout behavior is in `public/css/layout-protected.css`.
 
 ## Contributing
 
