@@ -36,14 +36,10 @@ class UserController
     {
         $this->requireAdmin();
 
-        $users   = $this->userModel->getAll();
-        $message = $_GET['message'] ?? '';
-        $error   = $_GET['error'] ?? '';
+        $users = $this->userModel->getAll();
 
         renderProtectedView('user/index.php', [
             'users' => $users,
-            'message' => $message,
-            'error' => $error,
         ]);
     }
 
@@ -62,16 +58,18 @@ class UserController
             ];
 
             if ($this->userModel->create($data)) {
-                header('Location: ' . APP_URL . '/users?message=' . urlencode('User added successfully'));
+                $_SESSION['message'] = 'User added successfully';
+                $_SESSION['icon']    = 'success';
+                header('Location: ' . APP_URL . '/users');
             } else {
-                header('Location: ' . APP_URL . '/users/create?error=' . urlencode('Failed to create user'));
+                $_SESSION['message'] = 'Failed to create user';
+                $_SESSION['icon']    = 'error';
+                header('Location: ' . APP_URL . '/users/create');
             }
             exit;
         }
 
-        renderProtectedView('user/create.php', [
-            'error' => $_GET['error'] ?? '',
-        ]);
+        renderProtectedView('user/create.php');
     }
 
     public function edit(): void
@@ -90,9 +88,13 @@ class UserController
             ];
 
             if ($this->userModel->update($id, $data)) {
-                header('Location: ' . APP_URL . '/users?message=' . urlencode('User updated successfully'));
+                $_SESSION['message'] = 'User updated successfully';
+                $_SESSION['icon']    = 'success';
+                header('Location: ' . APP_URL . '/users');
             } else {
-                header('Location: ' . APP_URL . '/users/edit?id=' . $id . '&error=' . urlencode('Failed to update user'));
+                $_SESSION['message'] = 'Failed to update user';
+                $_SESSION['icon']    = 'error';
+                header('Location: ' . APP_URL . '/users/edit?id=' . $id);
             }
             exit;
         }
@@ -101,13 +103,14 @@ class UserController
         $user = $this->userModel->getById($id);
 
         if (!$user) {
-            header('Location: ' . APP_URL . '/users?error=' . urlencode('User not found'));
+            $_SESSION['message'] = 'User not found';
+            $_SESSION['icon']    = 'error';
+            header('Location: ' . APP_URL . '/users');
             exit;
         }
 
         renderProtectedView('user/edit.php', [
             'user' => $user,
-            'error' => $_GET['error'] ?? '',
         ]);
     }
 
@@ -119,9 +122,13 @@ class UserController
             $id = (int) $_GET['id'];
 
             if ($this->userModel->delete($id)) {
-                header('Location: ' . APP_URL . '/users?message=' . urlencode('User deleted successfully'));
+                $_SESSION['message'] = 'User deleted successfully';
+                $_SESSION['icon']    = 'success';
+                header('Location: ' . APP_URL . '/users');
             } else {
-                header('Location: ' . APP_URL . '/users?error=' . urlencode('Failed to delete user'));
+                $_SESSION['message'] = 'Failed to delete user';
+                $_SESSION['icon']    = 'error';
+                header('Location: ' . APP_URL . '/users');
             }
             exit;
         }

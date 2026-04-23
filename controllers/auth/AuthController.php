@@ -37,16 +37,20 @@ class AuthController
                     $_SESSION['user_id']  = $user['id'];
                     $_SESSION['name']     = $user['first_name'];
                     $_SESSION['is_admin'] = $user['is_admin'];
+                    $_SESSION['message']  = "Welcome, " . $user['first_name'] . "!";
+                    $_SESSION['icon']     = "success";
                     header('Location: ' . APP_URL . '/');
                     exit;
                 }
 
-                $_SESSION['flash_error'] = 'Incorrect username or password';
+                $_SESSION['message'] = 'Incorrect username or password';
+                $_SESSION['icon']    = 'error';
                 header('Location: ' . APP_URL . '/login');
                 exit;
             }
 
-            $_SESSION['flash_error'] = 'Please fill in all fields';
+            $_SESSION['message'] = 'Please fill in all fields';
+            $_SESSION['icon']    = 'warning';
             header('Location: ' . APP_URL . '/login');
             exit;
         }
@@ -57,6 +61,9 @@ class AuthController
     public function logout(): void
     {
         session_destroy();
+        session_start();
+        $_SESSION['message'] = 'Logged out successfully';
+        $_SESSION['icon']    = 'success';
         header('Location: ' . APP_URL . '/login');
         exit;
     }
@@ -77,7 +84,8 @@ class AuthController
             $user  = $this->userModel->getByEmail($email);
 
             if (!$user) {
-                $_SESSION['flash_error'] = 'Email not registered in the system';
+                $_SESSION['message'] = 'Email not registered in the system';
+                $_SESSION['icon']    = 'error';
                 header('Location: ' . APP_URL . '/forgot-password');
                 exit;
             }
@@ -151,11 +159,13 @@ class AuthController
                     </html>";
 
                 $mail->send();
-                $_SESSION['flash_message'] = 'A recovery link has been sent to your email';
+                $_SESSION['message'] = 'A recovery link has been sent to your email';
+                $_SESSION['icon']    = 'success';
                 header('Location: ' . APP_URL . '/');
                 exit;
             } catch (Exception $e) {
-                $_SESSION['flash_error'] = 'Failed to send email: ' . $mail->ErrorInfo;
+                $_SESSION['message'] = 'Failed to send email: ' . $mail->ErrorInfo;
+                $_SESSION['icon']    = 'error';
                 header('Location: ' . APP_URL . '/forgot-password');
                 exit;
             }
@@ -172,7 +182,8 @@ class AuthController
             $confirmPassword = $_POST['confirm_password'];
 
             if ($newPassword !== $confirmPassword) {
-                $_SESSION['flash_error'] = 'Passwords do not match';
+                $_SESSION['message'] = 'Passwords do not match';
+                $_SESSION['icon']    = 'warning';
                 header('Location: ' . APP_URL . '/reset-password?token=' . urlencode($token));
                 exit;
             }
@@ -195,12 +206,14 @@ class AuthController
                 $stmtMark->execute();
                 $stmtMark->close();
 
-                $_SESSION['flash_message'] = 'Password updated successfully';
+                $_SESSION['message'] = 'Password updated successfully';
+                $_SESSION['icon']    = 'success';
                 header('Location: ' . APP_URL . '/login');
                 exit;
             }
 
-            $_SESSION['flash_error'] = 'Invalid or expired token';
+            $_SESSION['message'] = 'Invalid or expired token';
+            $_SESSION['icon']    = 'error';
             header('Location: ' . APP_URL . '/reset-password?token=' . urlencode($token));
             exit;
         }

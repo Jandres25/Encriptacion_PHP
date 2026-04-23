@@ -1,9 +1,3 @@
-<?php if (!empty($error)): ?>
-    <div class="alert alert-danger text-center m-auto" style="max-width:60%;">
-        <?= htmlspecialchars($error) ?>
-    </div>
-<?php endif; ?>
-
 <section class="container mb-3" style="max-width: 720px;">
     <h2 class="mb-3"><i class="fas fa-user-plus mr-2"></i>Create User</h2>
     <div class="card shadow-sm">
@@ -70,12 +64,12 @@
             <div class="card-footer">
                 <div class="row">
                     <div class="col-12 col-sm-auto mb-2 mb-sm-0">
-                        <button type="submit" name="add_user" class="btn btn-outline-primary w-100">
+                        <button type="submit" name="add_user" class="btn btn-primary w-100">
                             <i class="fas fa-user-plus"></i> Add User
                         </button>
                     </div>
                     <div class="col-12 col-sm-auto">
-                        <a class="btn btn-outline-secondary w-100" href="<?= APP_URL ?>/users" role="button">
+                        <a class="btn btn-light border w-100" href="<?= APP_URL ?>/users" role="button">
                             <i class="fas fa-undo"></i> Cancel
                         </a>
                     </div>
