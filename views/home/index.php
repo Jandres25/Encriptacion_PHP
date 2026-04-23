@@ -5,10 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Dashboard — SecureAuth</title>
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/bootstrap.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/all.min.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/estilo.css">
-    <link href="<?= APP_URL ?>/public/img/boton-de-inicio.png" rel="shortcut icon">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/bootstrap.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/all.min.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/estilo.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/sweetalert2.min.css">
+    <script src="<?= APP_URL ?>/js/sweetalert2.all.min.js"></script>
+    <link href="<?= APP_URL ?>/img/boton-de-inicio.png" rel="shortcut icon">
 </head>
 
 <body class="dashboard">
@@ -28,11 +30,11 @@
                     </a>
                 </li>
                 <?php if ($isAdmin): ?>
-                <li class="nav-item">
-                    <a class="nav-link ml-2" href="<?= APP_URL ?>/users">
-                        <i class="fas fa-users mr-1"></i> Users
-                    </a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link ml-2" href="<?= APP_URL ?>/users">
+                            <i class="fas fa-users mr-1"></i> Users
+                        </a>
+                    </li>
                 <?php endif; ?>
             </ul>
             <ul class="navbar-nav mr-2">
@@ -59,13 +61,13 @@
                     Welcome, <?= htmlspecialchars($name) ?>
                 </h1>
                 <p class="lead mb-4 text-light">
-                    Secure authentication system with bcrypt password hashing<br>
-                    and email-based password recovery.
+                    Secure authentication system with bcrypt password hashing,<br>
+                    clean URL routing, and smart caching for user listings.
                 </p>
                 <?php if ($isAdmin): ?>
-                <a href="<?= APP_URL ?>/users" class="btn btn-app-primary btn-lg px-4">
-                    <i class="fas fa-users mr-2"></i> Manage Users
-                </a>
+                    <a href="<?= APP_URL ?>/users" class="btn btn-app-primary btn-lg px-4">
+                        <i class="fas fa-users mr-2"></i> Manage Users
+                    </a>
                 <?php endif; ?>
             </div>
         </section>
@@ -96,7 +98,8 @@
                             <h5 class="card-title font-weight-bold">User Management</h5>
                             <p class="card-text text-muted">
                                 Full CRUD for users with role-based access control.
-                                Only administrators can create, edit, or delete accounts.
+                                Only administrators can create, edit, or delete accounts,
+                                with reusable protected layouts across admin screens.
                             </p>
                         </div>
                     </div>
@@ -107,10 +110,10 @@
                             <div class="feature-icon text-white mx-auto" style="background-color: var(--color-dark);">
                                 <i class="fas fa-envelope"></i>
                             </div>
-                            <h5 class="card-title font-weight-bold">Password Recovery</h5>
+                            <h5 class="card-title font-weight-bold">Recovery and Caching</h5>
                             <p class="card-text text-muted">
-                                Token-based reset via PHPMailer with STARTTLS.
-                                Tokens expire after 1 hour and are single-use.
+                                Token-based reset via PHPMailer with STARTTLS plus
+                                cached `/users` listing with automatic invalidation on writes.
                             </p>
                         </div>
                     </div>
@@ -125,9 +128,12 @@
         </div>
     </footer>
 
-    <script src="<?= APP_URL ?>/public/js/jquery-3.3.1.slim.min.js"></script>
-    <script src="<?= APP_URL ?>/public/js/popper.min.js"></script>
-    <script src="<?= APP_URL ?>/public/js/bootstrap.min.js"></script>
+    <script src="<?= APP_URL ?>/js/jquery.min.js"></script>
+    <script src="<?= APP_URL ?>/js/popper.min.js"></script>
+    <script src="<?= APP_URL ?>/js/bootstrap.min.js"></script>
+    <script src="<?= APP_URL ?>/js/sweetalert2.all.min.js"></script>
+
+    <?php include __DIR__ . '/../layouts/messages.php'; ?>
 </body>
 
 </html>

@@ -6,14 +6,18 @@
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/estilo.css">
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/bootstrap.css">
-    <link rel="preload" href="<?= APP_URL ?>/public/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?= APP_URL ?>/public/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/all.min.css">
-    <link href="<?= APP_URL ?>/public/img/usuario.png" rel="shortcut icon">
-    <link href="<?= APP_URL ?>/public/DataTables/datatables.css" rel="stylesheet">
-    <link rel="stylesheet" href="<?= APP_URL ?>/public/css/layout-protected.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/estilo.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/bootstrap.css">
+    <link rel="preload" href="<?= APP_URL ?>/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="<?= APP_URL ?>/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/all.min.css">
+    <link href="<?= APP_URL ?>/img/usuario.png" rel="shortcut icon">
+    <link href="<?= APP_URL ?>/DataTables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="<?= APP_URL ?>/DataTables/responsive.bootstrap4.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/layout-protected.css">
+    <link rel="stylesheet" href="<?= APP_URL ?>/css/sweetalert2.min.css">
+    <script src="<?= APP_URL ?>/js/sweetalert2.all.min.js"></script>
+    <script src="<?= APP_URL ?>/js/jquery.min.js"></script>
 </head>
 
 <body>

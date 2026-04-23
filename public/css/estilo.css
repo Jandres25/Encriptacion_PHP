@@ -119,7 +119,10 @@ body.dashboard {
   flex-direction: column;
   min-height: 100vh;
 }
-body.dashboard main { flex: 1; }
+
+body.dashboard main {
+  flex: 1;
+}
 
 .hero {
   background: linear-gradient(135deg, var(--color-dark) 0%, var(--color-accent) 100%);
@@ -127,6 +130,7 @@ body.dashboard main { flex: 1; }
   display: flex;
   align-items: center;
 }
+
 .feature-icon {
   width: 56px;
   height: 56px;
