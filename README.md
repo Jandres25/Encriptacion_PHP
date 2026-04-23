@@ -16,6 +16,8 @@ PHP web application implementing a secure authentication system with bcrypt pass
 - Secure login with bcrypt password hashing (`password_hash()` / `password_verify()`)
 - Password recovery via email with expiring single-use tokens
 - Admin user management (create, edit, delete)
+- SweetAlert2 toast notifications for all CRUD and authentication actions
+- SweetAlert2 confirmation dialog for user deletion in `/users`
 - Front controller architecture with clean URL routing
 - OOP controllers (`AuthController`, `UserController`) with thin delegator pattern
 - OOP model layer with MySQLi prepared statements
@@ -119,15 +121,16 @@ mysql -u root -p < database/seeds.sql
 │   ├── css/               # Bootstrap, all.min.css (FontAwesome), estilo.css, layout-protected.css
 │   ├── DataTables/        # DataTables combined bundle (datatables.js)
 │   ├── img/               # Images and icons
-│   ├── js/                # jQuery, Bootstrap JS, Popper, users-table.js
+│   ├── js/                # jQuery, Bootstrap JS, Popper, sweetalert2.all.min.js, users-table.js, users-delete.js
 │   └── webfonts/          # FontAwesome webfonts (used by all.min.css)
 ├── storage/
 │   └── cache/             # Runtime cache files (*.cache)
 ├── views/
 │   ├── auth/              # login, forgot_password, reset_password
-│   ├── templates/         # shared header/footer for protected pages
+│   ├── layouts/           # shared header/footer and messages.php for notifications
 │   ├── user/              # index, create, edit
-│   └── index.php          # Dashboard view
+│   ├── home/              # home/index.php
+│   │   └── index.php      # Dashboard view
 ├── index.php              # Front controller — routes by path (/login, /users, ...)
 ├── .htaccess              # Apache rewrite rules for clean URLs
 ├── .env.example           # Environment variable template
@@ -145,16 +148,16 @@ mysql -u root -p < database/seeds.sql
 
 The app uses a single front controller (`index.php`) with clean URL paths:
 
-| URL                               | Page                   |
-| --------------------------------- | ---------------------- |
-| `/`                               | Dashboard              |
-| `/login`                          | Login                  |
-| `/forgot-password`                | Forgot password        |
-| `/reset-password?token=...`       | Reset password         |
-| `/users`                          | User list (admin only) |
-| `/users/create`                   | Create user            |
-| `/users/edit?id=X`                | Edit user              |
-| `/users/delete?id=X`              | Delete user            |
+| URL                         | Page                   |
+| --------------------------- | ---------------------- |
+| `/`                         | Dashboard              |
+| `/login`                    | Login                  |
+| `/forgot-password`          | Forgot password        |
+| `/reset-password?token=...` | Reset password         |
+| `/users`                    | User list (admin only) |
+| `/users/create`             | Create user            |
+| `/users/edit?id=X`          | Edit user              |
+| `/users/delete?id=X`        | Delete user            |
 
 ## Security
 
@@ -186,8 +189,9 @@ The app uses a single front controller (`index.php`) with clean URL paths:
 ## Rendering and Layout
 
 - Protected pages use `renderProtectedView()` from `config/view_helpers.php`.
-- Shared protected layout lives in `views/templates/header.php` and `views/templates/footer.php`.
+- Shared protected layout lives in `views/layouts/header.php` and `views/layouts/footer.php`.
 - DataTables initialization for the users table was moved to `public/js/users-table.js`.
+- User deletion confirmation in `views/user/index.php` is handled by `public/js/users-delete.js` (SweetAlert2).
 - Full-height protected layout behavior is in `public/css/layout-protected.css`.
 
 ## Contributing
