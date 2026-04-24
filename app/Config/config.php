@@ -66,7 +66,7 @@ function env(string $key, mixed $default = null): mixed
 
 // Cargar variables de entorno
 try {
-    loadEnv(__DIR__ . '/../.env');
+    loadEnv(__DIR__ . '/../../.env');
 } catch (Exception $e) {
     die('Error loading .env file: ' . $e->getMessage());
 }

@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../libs/Cache/FileCache.php';
+require_once __DIR__ . '/../../libs/Cache/FileCache.php';
 
 function appCache(): FileCache
 {
@@ -10,7 +10,7 @@ function appCache(): FileCache
         return $cache;
     }
 
-    $cachePath = __DIR__ . '/../storage/cache';
+    $cachePath = __DIR__ . '/../../storage/cache';
     if (!is_dir($cachePath)) {
         if (!mkdir($cachePath, 0777, true) && !is_dir($cachePath)) {
             trigger_error('Unable to create cache directory: ' . $cachePath, E_USER_WARNING);

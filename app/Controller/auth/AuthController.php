@@ -7,11 +7,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../../libs/PHPMailer/src/Exception.php';
-require_once __DIR__ . '/../../libs/PHPMailer/src/PHPMailer.php';
-require_once __DIR__ . '/../../libs/PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/../../../libs/PHPMailer/src/Exception.php';
+require_once __DIR__ . '/../../../libs/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../../../libs/PHPMailer/src/SMTP.php';
 
-require_once __DIR__ . '/../../model/User.php';
+require_once __DIR__ . '/../../Model/User.php';
 
 class AuthController
 {
@@ -55,7 +55,7 @@ class AuthController
             exit;
         }
 
-        include __DIR__ . '/../../views/auth/login.php';
+        include __DIR__ . '/../../../views/auth/login.php';
     }
 
     public function logout(): void
@@ -171,7 +171,7 @@ class AuthController
             }
         }
 
-        include __DIR__ . '/../../views/auth/forgot_password.php';
+        include __DIR__ . '/../../../views/auth/forgot_password.php';
     }
 
     public function resetPassword(): void
@@ -218,6 +218,6 @@ class AuthController
             exit;
         }
 
-        include __DIR__ . '/../../views/auth/reset_password.php';
+        include __DIR__ . '/../../../views/auth/reset_password.php';
     }
 }

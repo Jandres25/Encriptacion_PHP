@@ -4,7 +4,7 @@ namespace App\Controller\User;
 
 use App\Model\User;
 
-require_once __DIR__ . '/../../model/User.php';
+require_once __DIR__ . '/../../Model/User.php';
 
 class UserController
 {
