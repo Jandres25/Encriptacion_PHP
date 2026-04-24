@@ -2,7 +2,7 @@
 
 # Authentication and Password Recovery System
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.3.0)
+[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.3.1)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
@@ -89,40 +89,43 @@ mysql -u root -p < database/seeds.sql
 ## Project Structure
 
 ```
-├── config/
-│   ├── autoload.php       # Bootstrap entry point
-│   ├── cache.php          # Cache bootstrap + appCache() helper
-│   ├── config.php         # Loads .env, defines APP_URL
-│   ├── database.php       # MySQLi connection ($connection)
-│   └── view_helpers.php   # renderView() / renderProtectedView()
-├── controllers/
-│   ├── auth/
-│   │   ├── AuthController.php   # App\Controller\Auth\AuthController — all auth logic
-│   │   ├── login.php            # Thin delegator → AuthController::login()
-│   │   ├── logout.php           # Thin delegator → AuthController::logout()
-│   │   ├── reset.php            # Thin delegator → AuthController::forgotPassword()
-│   │   └── update_password.php  # Thin delegator → AuthController::resetPassword()
-│   ├── user/
-│   │   ├── UserController.php   # App\Controller\User\UserController — all user CRUD logic
-│   │   ├── index.php            # Thin delegator → UserController::index()
-│   │   ├── create.php           # Thin delegator → UserController::create()
-│   │   ├── edit.php             # Thin delegator → UserController::edit()
-│   │   └── delete.php           # Thin delegator → UserController::delete()
-│   └── home.php                 # Dashboard controller
+├── app/
+│   ├── Config/
+│   │   ├── autoload.php       # Bootstrap entry point
+│   │   ├── cache.php          # Cache bootstrap + appCache() helper
+│   │   ├── config.php         # Loads .env, defines APP_URL
+│   │   ├── database.php       # MySQLi connection ($connection)
+│   │   └── view_helpers.php   # renderView() / renderProtectedView()
+│   ├── Controller/
+│   │   ├── auth/
+│   │   │   ├── AuthController.php   # App\Controller\Auth\AuthController — all auth logic
+│   │   │   ├── login.php            # Thin delegator → AuthController::login()
+│   │   │   ├── logout.php           # Thin delegator → AuthController::logout()
+│   │   │   ├── reset.php            # Thin delegator → AuthController::forgotPassword()
+│   │   │   └── update_password.php  # Thin delegator → AuthController::resetPassword()
+│   │   ├── user/
+│   │   │   ├── UserController.php   # App\Controller\User\UserController — all user CRUD logic
+│   │   │   ├── index.php            # Thin delegator → UserController::index()
+│   │   │   ├── create.php           # Thin delegator → UserController::create()
+│   │   │   ├── edit.php             # Thin delegator → UserController::edit()
+│   │   │   └── delete.php           # Thin delegator → UserController::delete()
+│   │   └── home.php                 # Dashboard controller
+│   └── Model/
+│       └── User.php           # App\Model\User — OOP model with prepared statements
 ├── database/
 │   ├── schema.sql         # Table definitions (users + password_resets)
 │   └── seeds.sql          # Sample data
 ├── libs/
 │   ├── Cache/             # File-based cache implementation
 │   └── PHPMailer/         # PHPMailer (no Composer)
-├── model/
-│   └── User.php           # App\Model\User — OOP model with prepared statements
 ├── public/
 │   ├── css/               # Bootstrap, all.min.css (FontAwesome), estilo.css, layout-protected.css
 │   ├── DataTables/        # DataTables combined bundle (datatables.js)
 │   ├── img/               # Images and icons
 │   ├── js/                # jQuery, Bootstrap JS, Popper, sweetalert2.all.min.js, users-table.js, users-delete.js
-│   └── webfonts/          # FontAwesome webfonts (used by all.min.css)
+│   ├── webfonts/          # FontAwesome webfonts (used by all.min.css)
+│   ├── .htaccess          # Apache rewrite rules for clean URLs
+│   └── index.php          # Front controller — routes by path (/login, /users, ...)
 ├── storage/
 │   └── cache/             # Runtime cache files (*.cache)
 ├── views/
@@ -131,8 +134,6 @@ mysql -u root -p < database/seeds.sql
 │   ├── user/              # index, create, edit
 │   ├── home/              # home/index.php
 │   │   └── index.php      # Dashboard view
-├── index.php              # Front controller — routes by path (/login, /users, ...)
-├── .htaccess              # Apache rewrite rules for clean URLs
 ├── .env.example           # Environment variable template
 └── database/schema.sql    # Source of truth for DB schema
 ```
@@ -146,7 +147,7 @@ mysql -u root -p < database/seeds.sql
 
 ## URL Routing
 
-The app uses a single front controller (`index.php`) with clean URL paths:
+The app uses a single front controller (`public/index.php`) with clean URL paths:
 
 | URL                         | Page                   |
 | --------------------------- | ---------------------- |
@@ -188,7 +189,7 @@ The app uses a single front controller (`index.php`) with clean URL paths:
 
 ## Rendering and Layout
 
-- Protected pages use `renderProtectedView()` from `config/view_helpers.php`.
+- Protected pages use `renderProtectedView()` from `app/Config/view_helpers.php`.
 - Shared protected layout lives in `views/layouts/header.php` and `views/layouts/footer.php`.
 - DataTables initialization for the users table was moved to `public/js/users-table.js`.
 - User deletion confirmation in `views/user/index.php` is handled by `public/js/users-delete.js` (SweetAlert2).

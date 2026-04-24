@@ -49,59 +49,59 @@ CACHE_ENABLED=true
 CACHE_TTL_USERS=60
 ```
 
-The `.env` file is loaded by `loadEnv()` in `config/config.php`, which also defines the `APP_URL` constant and `$url` variable. There is no Composer autoload for dotenv.
+The `.env` file is loaded by `loadEnv()` in `app/Config/config.php`, which also defines the `APP_URL` constant and `$url` variable. There is no Composer autoload for dotenv.
 
 ## Architecture
 
 ### Request Flow
 
 ```
-Browser → index.php (front controller) → controllers/auth/*.php or controllers/user/*.php
+Browser → public/index.php (front controller) → app/Controller/auth/*.php or app/Controller/user/*.php
        → AuthController / UserController → views/*.php
 ```
 
-`index.php` supports clean URLs and dispatches to the matching thin delegator file. It first uses `$_GET['page']` when present, otherwise resolves from `REQUEST_URI` (stripping the app base path). Each delegator instantiates the module's controller class and calls the corresponding method, which handles GET (render view) and POST (process form).
+`public/index.php` supports clean URLs and dispatches to the matching thin delegator file. It first uses `$_GET['page']` when present, otherwise resolves from `REQUEST_URI` (stripping the app base path). Each delegator instantiates the module's controller class and calls the corresponding method, which handles GET (render view) and POST (process form).
 
 ### URL Scheme
 
 | URL                         | Controller                             |
 | --------------------------- | -------------------------------------- |
-| `/login`                    | `controllers/auth/login.php`           |
-| `/logout`                   | `controllers/auth/logout.php`          |
-| `/forgot-password`          | `controllers/auth/reset.php`           |
-| `/reset-password?token=...` | `controllers/auth/update_password.php` |
-| `/` (default)               | `controllers/home.php`                 |
-| `/users`                    | `controllers/user/index.php`           |
-| `/users/create`             | `controllers/user/create.php`          |
-| `/users/edit?id=X`          | `controllers/user/edit.php`            |
-| `/users/delete?id=X`        | `controllers/user/delete.php`          |
+| `/login`                    | `app/Controller/auth/login.php`           |
+| `/logout`                   | `app/Controller/auth/logout.php`          |
+| `/forgot-password`          | `app/Controller/auth/reset.php`           |
+| `/reset-password?token=...` | `app/Controller/auth/update_password.php` |
+| `/` (default)               | `app/Controller/home.php`                 |
+| `/users`                    | `app/Controller/user/index.php`           |
+| `/users/create`             | `app/Controller/user/create.php`          |
+| `/users/edit?id=X`          | `app/Controller/user/edit.php`            |
+| `/users/delete?id=X`        | `app/Controller/user/delete.php`          |
 
 ### Key Files
 
 | Path                                                    | Purpose                                                                                                                                   |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.php`                                             | Front controller — loads autoload, starts session, dispatches by path                                                                     |
-| `.htaccess`                                             | Apache rewrite rules: non-file/non-directory requests route to `index.php`                                                                |
-| `config/config.php`                                     | Loads `.env` with `loadEnv()` + `env()`; defines `APP_URL` constant and `$url`                                                            |
-| `config/database.php`                                   | Creates `$connection` MySQLi using `env()` helper                                                                                         |
-| `config/view_helpers.php`                               | Shared render helpers: `renderView()` and `renderProtectedView()`                                                                         |
-| `config/cache.php`                                      | Cache bootstrap; exposes `appCache()` and graceful fallback when cache directory is not writable                                          |
-| `config/autoload.php`                                   | Bootstrap entry point; includes view helpers + cache + database                                                                           |
-| `model/User.php`                                        | OOP model (`App\Model\User`); all DB queries via prepared statements                                                                      |
-| `controllers/auth/AuthController.php`                   | `App\Controller\Auth\AuthController` — all auth logic: `login()`, `logout()`, `forgotPassword()`, `resetPassword()`                       |
-| `controllers/auth/login.php`                            | Thin delegator → `AuthController::login()`                                                                                                |
-| `controllers/auth/logout.php`                           | Thin delegator → `AuthController::logout()`                                                                                               |
-| `controllers/auth/reset.php`                            | Thin delegator → `AuthController::forgotPassword()`                                                                                       |
-| `controllers/auth/update_password.php`                  | Thin delegator → `AuthController::resetPassword()`                                                                                        |
-| `controllers/home.php`                                  | Auth check, sets `$name`/`$isAdmin`/`$year`, includes dashboard view                                                                      |
-| `controllers/user/UserController.php`                   | `App\Controller\User\UserController` — all user CRUD logic + `requireAuth()` / `requireAdmin()` guards                                    |
-| `controllers/user/index.php`                            | Thin delegator → `UserController::index()`                                                                                                |
-| `controllers/user/create.php`                           | Thin delegator → `UserController::create()`                                                                                               |
-| `controllers/user/edit.php`                             | Thin delegator → `UserController::edit()`                                                                                                 |
-| `controllers/user/delete.php`                           | Thin delegator → `UserController::delete()`                                                                                               |
+| `public/index.php`                                      | Front controller — loads autoload, starts session, dispatches by path                                                                     |
+| `public/.htaccess`                                      | Apache rewrite rules: non-file/non-directory requests route to `public/index.php`                                                         |
+| `app/Config/config.php`                                 | Loads `.env` with `loadEnv()` + `env()`; defines `APP_URL` constant and `$url`                                                            |
+| `app/Config/database.php`                               | Creates `$connection` MySQLi using `env()` helper                                                                                         |
+| `app/Config/view_helpers.php`                           | Shared render helpers: `renderView()` and `renderProtectedView()`                                                                         |
+| `app/Config/cache.php`                                  | Cache bootstrap; exposes `appCache()` and graceful fallback when cache directory is not writable                                          |
+| `app/Config/autoload.php`                               | Bootstrap entry point; includes view helpers + cache + database                                                                           |
+| `app/Model/User.php`                                    | OOP model (`App\Model\User`); all DB queries via prepared statements                                                                      |
+| `app/Controller/auth/AuthController.php`                | `App\Controller\Auth\AuthController` — all auth logic: `login()`, `logout()`, `forgotPassword()`, `resetPassword()`                       |
+| `app/Controller/auth/login.php`                         | Thin delegator → `AuthController::login()`                                                                                                |
+| `app/Controller/auth/logout.php`                        | Thin delegator → `AuthController::logout()`                                                                                               |
+| `app/Controller/auth/reset.php`                         | Thin delegator → `AuthController::forgotPassword()`                                                                                       |
+| `app/Controller/auth/update_password.php`               | Thin delegator → `AuthController::resetPassword()`                                                                                        |
+| `app/Controller/home.php`                               | Auth check, sets `$name`/`$isAdmin`/`$year`, includes dashboard view                                                                      |
+| `app/Controller/user/UserController.php`                | `App\Controller\User\UserController` — all user CRUD logic + `requireAuth()` / `requireAdmin()` guards                                    |
+| `app/Controller/user/index.php`                         | Thin delegator → `UserController::index()`                                                                                                |
+| `app/Controller/user/create.php`                        | Thin delegator → `UserController::create()`                                                                                               |
+| `app/Controller/user/edit.php`                          | Thin delegator → `UserController::edit()`                                                                                                 |
+| `app/Controller/user/delete.php`                        | Thin delegator → `UserController::delete()`                                                                                               |
 | `views/layouts/header.php` / `views/layouts/footer.php` | Shared nav/footer for protected pages (DataTables, SweetAlert2)                                                                           |
 | `views/layouts/messages.php`                            | Centralized SweetAlert2 toast notification logic                                                                                          |
-| `views/home/index.php`                                  | Dashboard — hero + feature cards; receives `$name`, `$isAdmin`, `$year` from `controllers/home.php`                                       |
+| `views/home/index.php`                                  | Dashboard — hero + feature cards; receives `$name`, `$isAdmin`, `$year` from `app/Controller/home.php`                                    |
 | `public/css/estilo.css`                                 | Global styles + CSS palette variables (`--color-dark`, `--color-accent`); loaded by `views/layouts/header.php` and `views/home/index.php` |
 | `public/css/layout-protected.css`                       | Shared full-height layout styles for protected pages (`body` flex + footer push)                                                          |
 | `public/js/users-table.js`                              | DataTables initialization for `views/user/index.php`                                                                                      |
@@ -158,11 +158,11 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 
 ### Cache
 
-- Cache implementation: `libs/Cache/FileCache.php` + `config/cache.php`
+- Cache implementation: `libs/Cache/FileCache.php` + `app/Config/cache.php`
 - Cached query: users listing (`App\Model\User::getAll()`) with key `users.all`
 - TTL control: `CACHE_TTL_USERS` (seconds)
 - Enable/disable: `CACHE_ENABLED=true|false`
-- Invalidation occurs on `create`, `update`, `delete`, and `updatePassword` in `model/User.php`
+- Invalidation occurs on `create`, `update`, `delete`, and `updatePassword` in `app/Model/User.php`
 - Runtime files are stored in `storage/cache/*.cache`
 - If the cache directory is not writable, cache is disabled for the request and a warning is logged (no HTTP 500)
 
@@ -171,7 +171,7 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 - Passwords hashed with `password_hash($pass, PASSWORD_DEFAULT)` (bcrypt)
 - Session variables assigned only after successful `password_verify()` — never on failed login
 - Reset tokens: `bin2hex(random_bytes(32))` — 256-bit, 1-hour expiry, single-use (`used = 1` after consumption)
-- All DB queries in `model/User.php` use MySQLi prepared statements
+- All DB queries in `app/Model/User.php` use MySQLi prepared statements
 - Password resets use MySQLi prepared statements
 - Email sanitized with `filter_var($email, FILTER_SANITIZE_EMAIL)` before DB queries
 - SMTP uses STARTTLS encryption (port 587)

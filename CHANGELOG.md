@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+> Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
+
+## [1.3.1] — 2026-04-24
+
+### Changed
+
+- Reorganized project structure under `app/`:
+  - `config/` → `app/Config/`
+  - `controllers/` → `app/Controller/`
+  - `model/` → `app/Model/`
+- Updated front controller routing in `public/index.php` to load delegators from `app/Controller/*`.
+- Updated relative paths after the directory move (autoload, views, cache path, PHPMailer includes, and model includes).
+- Updated project documentation to reflect the new `app/` structure.
+
 ## [1.3.0] — 2026-04-23
 
 ### Added
