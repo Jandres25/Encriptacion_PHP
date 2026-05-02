@@ -12,10 +12,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   `email`      varchar(100) NOT NULL DEFAULT '',
   `username`   varchar(50)  NOT NULL,
   `password`   varchar(255) NOT NULL,
-  `is_admin`   tinyint(1)   NOT NULL DEFAULT 0,
+  `is_admin`               tinyint(1)   NOT NULL DEFAULT 0,
+  `remember_token`         varchar(64)           NULL DEFAULT NULL,
+  `remember_token_expires` datetime              NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email`    (`email`),
-  UNIQUE KEY `username` (`username`)
+  UNIQUE KEY `email`          (`email`),
+  UNIQUE KEY `username`       (`username`),
+  KEY `idx_remember_token`    (`remember_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- Table: password_resets
