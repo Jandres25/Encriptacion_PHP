@@ -2,7 +2,7 @@
 
 # Authentication and Password Recovery System
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.3.1)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.4.0)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
@@ -26,6 +26,8 @@ PHP web application implementing a secure authentication system with bcrypt pass
 - Consistent color palette via CSS variables (`--color-dark`, `--color-accent`)
 - File-based cache for admin user listing with automatic invalidation on create/edit/delete
 - Graceful cache fallback: if `storage/cache` is not writable, the app continues without cache and logs a warning
+- **Remember Me** — persistent login via secure `HttpOnly` / `SameSite=Strict` cookie; token stored as SHA-256 hash in DB; TTL configurable via `REMEMBER_ME_TTL`
+- **Session Timeout** — automatic session expiry after configurable inactivity period (`SESSION_TIMEOUT`); remember cookie also cleared on timeout to prevent immediate re-login
 
 ## Requirements
 
@@ -67,10 +69,17 @@ APP_TIMEZONE=America/Bogota
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
+
+REMEMBER_ME_ENABLED=true
+REMEMBER_ME_TTL=2592000
+
+SESSION_TIMEOUT=1800
 ```
 
 `CACHE_TTL_USERS` defines (in seconds) how long the `/users` list stays cached.
 The `storage/cache` directory must be writable by your web server user.
+`REMEMBER_ME_TTL` is the remember-me cookie and token lifetime in seconds (default 30 days).
+`SESSION_TIMEOUT` is the inactivity limit in seconds before the session is destroyed (default 30 min).
 
 3. Import the database schema:
 
@@ -168,6 +177,8 @@ The app uses a single front controller (`public/index.php`) with clean URL paths
 - All DB queries via MySQLi prepared statements
 - Email validated with `filter_var()` before DB lookup
 - SMTP with STARTTLS (port 587)
+- Remember-me tokens: raw token in cookie, SHA-256 hash in DB — never stored in clear text; cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS
+- Session timeout: inactivity expiry enforced on every protected request; clears remember cookie to prevent silent re-login after expiry
 
 ## Cache
 

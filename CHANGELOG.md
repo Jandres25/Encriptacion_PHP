@@ -6,6 +6,34 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.4.0] — 2026-05-02
+
+### Added
+
+- **Remember Me** — persistent login via secure cookie:
+  - Checkbox "Remember me" on the login form (`views/auth/login.php`)
+  - On login with checkbox: generates `bin2hex(random_bytes(32))` token, stores SHA-256 hash in `users.remember_token` with expiry, emits `HttpOnly` / `SameSite=Strict` cookie
+  - On every request without an active session: `AuthController::restoreFromCookie()` looks up the token hash and silently restores the session
+  - On logout or session expiry: token cleared from DB and cookie deleted from client
+  - Controlled by `REMEMBER_ME_ENABLED` and `REMEMBER_ME_TTL` env vars
+- **Session Timeout** — automatic expiry after inactivity:
+  - `$_SESSION['last_activity']` recorded on login and updated on every protected request
+  - `AuthController::checkSessionTimeout()` called in `home.php` and `UserController::requireAuth()` — destroys session and redirects to `/login` with a warning toast if `SESSION_TIMEOUT` seconds have elapsed
+  - On timeout: remember token also cleared so cookie-based restore does not immediately re-log the user in
+  - Controlled by `SESSION_TIMEOUT` env var (default 1800 s = 30 min)
+- New columns in `users` table: `remember_token VARCHAR(64) NULL`, `remember_token_expires DATETIME NULL`, index `idx_remember_token`
+- New model methods in `App\Model\User`: `setRememberToken()`, `getByRememberToken()`, `clearRememberToken()`
+- New env vars: `REMEMBER_ME_ENABLED`, `REMEMBER_ME_TTL`, `SESSION_TIMEOUT`
+- Migration script: `database/migrations/2026_05_02_add_remember_me_to_users.sql` (idempotent ALTER TABLE for existing installations)
+- `.remember-label` CSS class in `public/css/style.css` for styled checkbox label in auth forms
+
+### Changed
+
+- `session_start()` moved from `public/index.php` to `app/Config/autoload.php` so it runs before `restoreFromCookie()` on every request
+- `app/Config/autoload.php` now requires `AuthController.php` and calls `restoreFromCookie()` after session start
+
+---
+
 ## [1.3.1] — 2026-04-24
 
 ### Changed

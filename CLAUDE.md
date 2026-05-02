@@ -47,9 +47,18 @@ APP_TIMEZONE=America/Bogota
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
+
+REMEMBER_ME_ENABLED=true
+REMEMBER_ME_TTL=2592000
+
+SESSION_TIMEOUT=1800
 ```
 
 The `.env` file is loaded by `loadEnv()` in `app/Config/config.php`, which also defines the `APP_URL` constant and `$url` variable. There is no Composer autoload for dotenv.
+
+- `REMEMBER_ME_ENABLED` — enable/disable persistent login via cookie (default `true`)
+- `REMEMBER_ME_TTL` — cookie + token lifetime in seconds (default `2592000` = 30 days)
+- `SESSION_TIMEOUT` — inactivity expiry in seconds (default `1800` = 30 min)
 
 ## Architecture
 
@@ -80,20 +89,20 @@ Browser → public/index.php (front controller) → app/Controller/auth/*.php or
 
 | Path                                                    | Purpose                                                                                                                                   |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/index.php`                                      | Front controller — loads autoload, starts session, dispatches by path                                                                     |
+| `public/index.php`                                      | Front controller — loads autoload, dispatches by path (session_start moved to autoload)                                                   |
 | `public/.htaccess`                                      | Apache rewrite rules: non-file/non-directory requests route to `public/index.php`                                                         |
 | `app/Config/config.php`                                 | Loads `.env` with `loadEnv()` + `env()`; defines `APP_URL` constant and `$url`                                                            |
 | `app/Config/database.php`                               | Creates `$connection` MySQLi using `env()` helper                                                                                         |
 | `app/Config/view_helpers.php`                           | Shared render helpers: `renderView()` and `renderProtectedView()`                                                                         |
 | `app/Config/cache.php`                                  | Cache bootstrap; exposes `appCache()` and graceful fallback when cache directory is not writable                                          |
-| `app/Config/autoload.php`                               | Bootstrap entry point; includes view helpers + cache + database                                                                           |
+| `app/Config/autoload.php`                               | Bootstrap entry point; includes view helpers + cache + database; calls `session_start()` and `AuthController::restoreFromCookie()`        |
 | `app/Model/User.php`                                    | OOP model (`App\Model\User`); all DB queries via prepared statements                                                                      |
-| `app/Controller/auth/AuthController.php`                | `App\Controller\Auth\AuthController` — all auth logic: `login()`, `logout()`, `forgotPassword()`, `resetPassword()`                       |
+| `app/Controller/auth/AuthController.php`                | `App\Controller\Auth\AuthController` — all auth logic: `login()`, `logout()`, `forgotPassword()`, `resetPassword()`, `restoreFromCookie()`, `checkSessionTimeout()` |
 | `app/Controller/auth/login.php`                         | Thin delegator → `AuthController::login()`                                                                                                |
 | `app/Controller/auth/logout.php`                        | Thin delegator → `AuthController::logout()`                                                                                               |
 | `app/Controller/auth/reset.php`                         | Thin delegator → `AuthController::forgotPassword()`                                                                                       |
 | `app/Controller/auth/update_password.php`               | Thin delegator → `AuthController::resetPassword()`                                                                                        |
-| `app/Controller/home.php`                               | Auth check, sets `$name`/`$isAdmin`/`$year`, includes dashboard view                                                                      |
+| `app/Controller/home.php`                               | Calls `checkSessionTimeout()`, auth check, sets `$name`/`$isAdmin`/`$year`, includes dashboard view                                       |
 | `app/Controller/user/UserController.php`                | `App\Controller\User\UserController` — all user CRUD logic + `requireAuth()` / `requireAdmin()` guards                                    |
 | `app/Controller/user/index.php`                         | Thin delegator → `UserController::index()`                                                                                                |
 | `app/Controller/user/create.php`                        | Thin delegator → `UserController::create()`                                                                                               |
@@ -116,6 +125,7 @@ Set on login (only after successful `password_verify()`), required for all prote
 - `$_SESSION['user_id']` — user ID
 - `$_SESSION['name']` — display name (first_name)
 - `$_SESSION['is_admin']` — boolean, controls admin menu visibility
+- `$_SESSION['last_activity']` — Unix timestamp; updated on every request; used by `checkSessionTimeout()` to enforce inactivity expiry
 
 Flash notifications (used by `views/layouts/messages.php`):
 
@@ -124,8 +134,8 @@ Flash notifications (used by `views/layouts/messages.php`):
 
 ### Database Tables
 
-- **users**: `id, first_name, last_name, email, username, password` (bcrypt), `is_admin (DEFAULT 0)`
-  - `email` and `username` have UNIQUE constraints
+- **users**: `id, first_name, last_name, email, username, password` (bcrypt), `is_admin (DEFAULT 0)`, `remember_token` (sha256 hash, nullable), `remember_token_expires` (datetime, nullable)
+  - `email` and `username` have UNIQUE constraints; `remember_token` has an index (`idx_remember_token`)
 - **password_resets**: `id, email, token, created_at, expires_at, used`
 
 ## Frontend / Assets
@@ -175,6 +185,8 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 - Password resets use MySQLi prepared statements
 - Email sanitized with `filter_var($email, FILTER_SANITIZE_EMAIL)` before DB queries
 - SMTP uses STARTTLS encryption (port 587)
+- Remember-me tokens: `bin2hex(random_bytes(32))` stored raw in cookie; SHA-256 hash stored in DB (`remember_token`). Cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS. TTL controlled by `REMEMBER_ME_TTL` (default 30 days). Cleared on logout and on session expiry
+- Session timeout: `checkSessionTimeout()` called on every protected request; destroys session + clears remember cookie if `SESSION_TIMEOUT` seconds of inactivity exceeded (default 30 min)
 
 ## Notes
 
@@ -187,3 +199,5 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 - Auth views use `<button type="submit">` (not `<input type="submit">`); POST detection uses `isset($_POST['btnXXX'])` — not `!empty()` — since `<button>` without a `value` attribute submits an empty string
 - `.btn-anchor` in `public/css/style.css` — apply alongside `.btn` on `<a>` elements for correct vertical centering; do not rely on the `a.btn` selector
 - User delete flow in `views/user/index.php` uses `.js-delete-user` buttons with `data-delete-url`, `data-name`, and `data-username`; confirmation is handled in `public/js/users-delete.js` (no Bootstrap delete modals)
+- `session_start()` is called inside `app/Config/autoload.php` (not in `public/index.php`); `AuthController::restoreFromCookie()` runs immediately after on every request to restore session from a valid remember-me cookie
+- Login form (`views/auth/login.php`) includes `<input type="checkbox" name="remember" value="1">` for Remember Me; only processed when `REMEMBER_ME_ENABLED=true`; styled with `.remember-label` in `public/css/style.css`
