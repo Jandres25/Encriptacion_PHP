@@ -5,6 +5,7 @@ namespace App\Controller\User;
 use App\Model\User;
 
 require_once __DIR__ . '/../../Model/User.php';
+require_once __DIR__ . '/../auth/AuthController.php';
 
 class UserController
 {
@@ -17,6 +18,7 @@ class UserController
 
     private function requireAuth(): void
     {
+        (new \App\Controller\Auth\AuthController($this->connection))->checkSessionTimeout();
         if (empty($_SESSION['user_id'])) {
             header('Location: ' . APP_URL . '/login');
             exit;

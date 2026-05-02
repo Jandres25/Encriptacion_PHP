@@ -124,6 +124,42 @@ class User
         return $success;
     }
 
+    public function setRememberToken(int $userId, string $tokenHash, string $expiresAt): bool
+    {
+        $stmt = $this->connection->prepare(
+            "UPDATE users SET remember_token = ?, remember_token_expires = ? WHERE id = ?"
+        );
+        $stmt->bind_param("ssi", $tokenHash, $expiresAt, $userId);
+        $stmt->execute();
+        $success = $stmt->affected_rows >= 0;
+        $stmt->close();
+        return $success;
+    }
+
+    public function getByRememberToken(string $tokenHash): ?array
+    {
+        $stmt = $this->connection->prepare(
+            "SELECT * FROM users WHERE remember_token = ? AND remember_token_expires > NOW() LIMIT 1"
+        );
+        $stmt->bind_param("s", $tokenHash);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return $user ?: null;
+    }
+
+    public function clearRememberToken(int $userId): bool
+    {
+        $stmt = $this->connection->prepare(
+            "UPDATE users SET remember_token = NULL, remember_token_expires = NULL WHERE id = ?"
+        );
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $success = $stmt->affected_rows >= 0;
+        $stmt->close();
+        return $success;
+    }
+
     public function updatePassword(string $email, string $newPassword): bool
     {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);

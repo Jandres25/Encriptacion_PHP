@@ -164,6 +164,30 @@ form {
 	margin-bottom: 4px;
 }
 
+.remember-label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: #999;
+	font-size: 0.9rem;
+	cursor: pointer;
+	user-select: none;
+	margin-top: 0.75rem;
+	transition: .3s;
+}
+
+.remember-label:hover {
+	color: #04a1fc;
+}
+
+.remember-label input[type="checkbox"] {
+	accent-color: #04a1fc;
+	width: 15px;
+	height: 15px;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
 a {
 	display: block;
 	text-align: right;

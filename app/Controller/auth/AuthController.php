@@ -15,11 +15,45 @@ require_once __DIR__ . '/../../Model/User.php';
 
 class AuthController
 {
+    private const REMEMBER_COOKIE = 'remember_me';
+
     private User $userModel;
 
     public function __construct(private \mysqli $connection)
     {
         $this->userModel = new User($connection);
+    }
+
+    private function rememberEnabled(): bool
+    {
+        return filter_var(env('REMEMBER_ME_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function rememberTtl(): int
+    {
+        return (int) env('REMEMBER_ME_TTL', 2592000);
+    }
+
+    private function sessionTimeout(): int
+    {
+        return (int) env('SESSION_TIMEOUT', 1800);
+    }
+
+    private function hashToken(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
+    private function cookieOptions(int $maxAge): array
+    {
+        $secure = str_starts_with(env('APP_URL', ''), 'https');
+        return [
+            'expires'  => time() + $maxAge,
+            'path'     => '/',
+            'secure'   => $secure,
+            'httponly' => true,
+            'samesite' => 'Strict',
+        ];
     }
 
     public function login(): void
@@ -34,11 +68,20 @@ class AuthController
                 $user = $this->userModel->getByUsername($_POST['usuario']);
 
                 if ($user && password_verify($_POST['password'], $user['password'])) {
-                    $_SESSION['user_id']  = $user['id'];
-                    $_SESSION['name']     = $user['first_name'];
-                    $_SESSION['is_admin'] = $user['is_admin'];
-                    $_SESSION['message']  = "Welcome, " . $user['first_name'] . "!";
-                    $_SESSION['icon']     = "success";
+                    $_SESSION['user_id']       = $user['id'];
+                    $_SESSION['name']          = $user['first_name'];
+                    $_SESSION['is_admin']      = $user['is_admin'];
+                    $_SESSION['last_activity'] = time();
+                    $_SESSION['message']       = "Welcome, " . $user['first_name'] . "!";
+                    $_SESSION['icon']          = "success";
+
+                    if ($this->rememberEnabled() && !empty($_POST['remember'])) {
+                        $token   = bin2hex(random_bytes(32));
+                        $expires = date('Y-m-d H:i:s', time() + $this->rememberTtl());
+                        $this->userModel->setRememberToken($user['id'], $this->hashToken($token), $expires);
+                        setcookie(self::REMEMBER_COOKIE, $token, $this->cookieOptions($this->rememberTtl()));
+                    }
+
                     header('Location: ' . APP_URL . '/');
                     exit;
                 }
@@ -60,12 +103,71 @@ class AuthController
 
     public function logout(): void
     {
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if ($userId && isset($_COOKIE[self::REMEMBER_COOKIE])) {
+            $this->userModel->clearRememberToken((int) $userId);
+            setcookie(self::REMEMBER_COOKIE, '', $this->cookieOptions(-3600));
+        }
+
         session_destroy();
         session_start();
         $_SESSION['message'] = 'Logged out successfully';
         $_SESSION['icon']    = 'success';
         header('Location: ' . APP_URL . '/login');
         exit;
+    }
+
+    public function restoreFromCookie(): void
+    {
+        if (!empty($_SESSION['user_id'])) {
+            return;
+        }
+
+        if (!$this->rememberEnabled()) {
+            return;
+        }
+
+        if (empty($_COOKIE[self::REMEMBER_COOKIE])) {
+            return;
+        }
+
+        $tokenHash = $this->hashToken($_COOKIE[self::REMEMBER_COOKIE]);
+        $user      = $this->userModel->getByRememberToken($tokenHash);
+
+        if (!$user) {
+            $this->userModel->clearRememberToken(0);
+            setcookie(self::REMEMBER_COOKIE, '', $this->cookieOptions(-3600));
+            return;
+        }
+
+        $_SESSION['user_id']       = $user['id'];
+        $_SESSION['name']          = $user['first_name'];
+        $_SESSION['is_admin']      = $user['is_admin'];
+        $_SESSION['last_activity'] = time();
+    }
+
+    public function checkSessionTimeout(): void
+    {
+        if (empty($_SESSION['user_id'])) {
+            return;
+        }
+
+        if (time() - ($_SESSION['last_activity'] ?? time()) > $this->sessionTimeout()) {
+            $userId = $_SESSION['user_id'];
+            $this->userModel->clearRememberToken((int) $userId);
+            if (isset($_COOKIE[self::REMEMBER_COOKIE])) {
+                setcookie(self::REMEMBER_COOKIE, '', $this->cookieOptions(-3600));
+            }
+            session_destroy();
+            session_start();
+            $_SESSION['message'] = 'Your session has expired due to inactivity';
+            $_SESSION['icon']    = 'warning';
+            header('Location: ' . APP_URL . '/login');
+            exit;
+        }
+
+        $_SESSION['last_activity'] = time();
     }
 
     public function forgotPassword(): void
