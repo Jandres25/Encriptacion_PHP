@@ -4,9 +4,6 @@ namespace App\Controller\User;
 
 use App\Model\User;
 
-require_once __DIR__ . '/../../Model/User.php';
-require_once __DIR__ . '/../auth/AuthController.php';
-
 class UserController
 {
     private User $userModel;

@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../libs/Cache/FileCache.php';
+use App\Lib\Cache\FileCache;
 
 function appCache(): FileCache
 {

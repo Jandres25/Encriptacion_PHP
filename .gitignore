@@ -8,3 +8,6 @@ storage/cache/*.cache
 vendor/
 node_modules/
 public/storage/
+
+# Claude
+.claude

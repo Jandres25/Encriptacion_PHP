@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../app/Config/autoload.php';
 
 $page = $_GET['page'] ?? null;
@@ -19,14 +20,14 @@ if ($page === null) {
 }
 
 $routes = [
-    'login'           => __DIR__ . '/../app/Controller/auth/login.php',
-    'logout'          => __DIR__ . '/../app/Controller/auth/logout.php',
-    'forgot-password' => __DIR__ . '/../app/Controller/auth/reset.php',
-    'reset-password'  => __DIR__ . '/../app/Controller/auth/update_password.php',
-    'users'           => __DIR__ . '/../app/Controller/user/index.php',
-    'users/create'    => __DIR__ . '/../app/Controller/user/create.php',
-    'users/edit'      => __DIR__ . '/../app/Controller/user/edit.php',
-    'users/delete'    => __DIR__ . '/../app/Controller/user/delete.php',
+    'login'           => __DIR__ . '/../app/Controller/Auth/login.php',
+    'logout'          => __DIR__ . '/../app/Controller/Auth/logout.php',
+    'forgot-password' => __DIR__ . '/../app/Controller/Auth/reset.php',
+    'reset-password'  => __DIR__ . '/../app/Controller/Auth/update_password.php',
+    'users'           => __DIR__ . '/../app/Controller/User/index.php',
+    'users/create'    => __DIR__ . '/../app/Controller/User/create.php',
+    'users/edit'      => __DIR__ . '/../app/Controller/User/edit.php',
+    'users/delete'    => __DIR__ . '/../app/Controller/User/delete.php',
 ];
 
 $controller = $routes[$page] ?? __DIR__ . '/../app/Controller/home.php';

@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Lib\Cache;
+
 class FileCache
 {
     public function __construct(

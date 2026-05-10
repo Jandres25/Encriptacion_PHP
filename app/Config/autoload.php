@@ -1,9 +1,12 @@
 <?php
 
-require_once __DIR__ . '/view_helpers.php';
+use App\Controller\Auth\AuthController;
+
 require_once __DIR__ . '/cache.php';
 require_once __DIR__ . '/database.php';
 
-require_once __DIR__ . '/../Controller/auth/AuthController.php';
-session_start();
-(new \App\Controller\Auth\AuthController($connection))->restoreFromCookie();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+(new AuthController($connection))->restoreFromCookie();
