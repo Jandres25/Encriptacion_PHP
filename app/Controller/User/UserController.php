@@ -2,15 +2,15 @@
 
 namespace App\Controller\User;
 
-use App\Model\User;
+use App\Service\UserService;
 
 class UserController
 {
-    private User $userModel;
+    private UserService $userService;
 
     public function __construct(private \mysqli $connection)
     {
-        $this->userModel = new User($connection);
+        $this->userService = new UserService($connection);
     }
 
     private function requireAuth(): void
@@ -35,10 +35,8 @@ class UserController
     {
         $this->requireAdmin();
 
-        $users = $this->userModel->getAll();
-
         renderProtectedView('user/index.php', [
-            'users' => $users,
+            'users' => $this->userService->getAll(),
         ]);
     }
 
@@ -56,12 +54,14 @@ class UserController
                 'is_admin'   => isset($_POST['is_admin']) ? 1 : 0,
             ];
 
-            if ($this->userModel->create($data)) {
+            $result = $this->userService->create($data);
+
+            if ($result === true) {
                 $_SESSION['message'] = 'User added successfully';
                 $_SESSION['icon']    = 'success';
                 header('Location: ' . APP_URL . '/users');
             } else {
-                $_SESSION['message'] = 'Failed to create user';
+                $_SESSION['message'] = $result;
                 $_SESSION['icon']    = 'error';
                 header('Location: ' . APP_URL . '/users/create');
             }
@@ -86,12 +86,14 @@ class UserController
                 'is_admin'   => isset($_POST['is_admin']) ? 1 : 0,
             ];
 
-            if ($this->userModel->update($id, $data)) {
+            $result = $this->userService->update($id, $data);
+
+            if ($result === true) {
                 $_SESSION['message'] = 'User updated successfully';
                 $_SESSION['icon']    = 'success';
                 header('Location: ' . APP_URL . '/users');
             } else {
-                $_SESSION['message'] = 'Failed to update user';
+                $_SESSION['message'] = $result;
                 $_SESSION['icon']    = 'error';
                 header('Location: ' . APP_URL . '/users/edit?id=' . $id);
             }
@@ -99,7 +101,7 @@ class UserController
         }
 
         $id   = (int) ($_GET['id'] ?? 0);
-        $user = $this->userModel->getById($id);
+        $user = $this->userService->getById($id);
 
         if (!$user) {
             $_SESSION['message'] = 'User not found';
@@ -108,9 +110,7 @@ class UserController
             exit;
         }
 
-        renderProtectedView('user/edit.php', [
-            'user' => $user,
-        ]);
+        renderProtectedView('user/edit.php', ['user' => $user]);
     }
 
     public function delete(): void
@@ -118,17 +118,12 @@ class UserController
         $this->requireAdmin();
 
         if (isset($_GET['id'])) {
-            $id = (int) $_GET['id'];
+            $id     = (int) $_GET['id'];
+            $result = $this->userService->delete($id);
 
-            if ($this->userModel->delete($id)) {
-                $_SESSION['message'] = 'User deleted successfully';
-                $_SESSION['icon']    = 'success';
-                header('Location: ' . APP_URL . '/users');
-            } else {
-                $_SESSION['message'] = 'Failed to delete user';
-                $_SESSION['icon']    = 'error';
-                header('Location: ' . APP_URL . '/users');
-            }
+            $_SESSION['message'] = $result === true ? 'User deleted successfully' : $result;
+            $_SESSION['icon']    = $result === true ? 'success' : 'error';
+            header('Location: ' . APP_URL . '/users');
             exit;
         }
 
