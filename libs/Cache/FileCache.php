@@ -69,6 +69,10 @@ class FileCache
 
     public function forget(string $key): void
     {
+        if (!$this->enabled) {
+            return;
+        }
+
         $file = $this->filePath($key);
         if (is_file($file)) {
             unlink($file);

@@ -10,6 +10,12 @@ function appCache(): FileCache
         return $cache;
     }
 
+    // Saltar verificación del directorio si el caché está explícitamente deshabilitado.
+    if (!filter_var(env('CACHE_ENABLED', true), FILTER_VALIDATE_BOOLEAN)) {
+        $cache = new FileCache('', false);
+        return $cache;
+    }
+
     $cachePath = __DIR__ . '/../../storage/cache';
     if (!is_dir($cachePath)) {
         if (!mkdir($cachePath, 0777, true) && !is_dir($cachePath)) {
