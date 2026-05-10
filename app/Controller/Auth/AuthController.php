@@ -2,26 +2,20 @@
 
 namespace App\Controller\Auth;
 
-use App\Model\User;
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
-require_once __DIR__ . '/../../../libs/PHPMailer/src/Exception.php';
-require_once __DIR__ . '/../../../libs/PHPMailer/src/PHPMailer.php';
-require_once __DIR__ . '/../../../libs/PHPMailer/src/SMTP.php';
-
-require_once __DIR__ . '/../../Model/User.php';
+use App\Service\AuthService;
+use App\Service\MailerService;
 
 class AuthController
 {
     private const REMEMBER_COOKIE = 'remember_me';
 
-    private User $userModel;
+    private AuthService   $authService;
+    private MailerService $mailerService;
 
     public function __construct(private \mysqli $connection)
     {
-        $this->userModel = new User($connection);
+        $this->authService   = new AuthService($connection);
+        $this->mailerService = new MailerService();
     }
 
     private function rememberEnabled(): bool
@@ -29,28 +23,12 @@ class AuthController
         return filter_var(env('REMEMBER_ME_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
     }
 
-    private function rememberTtl(): int
-    {
-        return (int) env('REMEMBER_ME_TTL', 2592000);
-    }
-
-    private function sessionTimeout(): int
-    {
-        return (int) env('SESSION_TIMEOUT', 1800);
-    }
-
-    private function hashToken(string $token): string
-    {
-        return hash('sha256', $token);
-    }
-
     private function cookieOptions(int $maxAge): array
     {
-        $secure = str_starts_with(env('APP_URL', ''), 'https');
         return [
             'expires'  => time() + $maxAge,
             'path'     => '/',
-            'secure'   => $secure,
+            'secure'   => str_starts_with(env('APP_URL', ''), 'https'),
             'httponly' => true,
             'samesite' => 'Strict',
         ];
@@ -65,9 +43,9 @@ class AuthController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btningresar'])) {
             if (!empty($_POST['usuario']) && !empty($_POST['password'])) {
-                $user = $this->userModel->getByUsername($_POST['usuario']);
+                $user = $this->authService->verifyCredentials($_POST['usuario'], $_POST['password']);
 
-                if ($user && password_verify($_POST['password'], $user['password'])) {
+                if ($user) {
                     $_SESSION['user_id']       = $user['id'];
                     $_SESSION['name']          = $user['first_name'];
                     $_SESSION['is_admin']      = $user['is_admin'];
@@ -76,10 +54,8 @@ class AuthController
                     $_SESSION['icon']          = "success";
 
                     if ($this->rememberEnabled() && !empty($_POST['remember'])) {
-                        $token   = bin2hex(random_bytes(32));
-                        $expires = date('Y-m-d H:i:s', time() + $this->rememberTtl());
-                        $this->userModel->setRememberToken($user['id'], $this->hashToken($token), $expires);
-                        setcookie(self::REMEMBER_COOKIE, $token, $this->cookieOptions($this->rememberTtl()));
+                        $token = $this->authService->issueRememberToken($user['id']);
+                        setcookie(self::REMEMBER_COOKIE, $token, $this->cookieOptions($this->authService->rememberTtl()));
                     }
 
                     header('Location: ' . APP_URL . '/');
@@ -106,7 +82,7 @@ class AuthController
         $userId = $_SESSION['user_id'] ?? null;
 
         if ($userId && isset($_COOKIE[self::REMEMBER_COOKIE])) {
-            $this->userModel->clearRememberToken((int) $userId);
+            $this->authService->clearRememberToken((int) $userId);
             setcookie(self::REMEMBER_COOKIE, '', $this->cookieOptions(-3600));
         }
 
@@ -124,19 +100,13 @@ class AuthController
             return;
         }
 
-        if (!$this->rememberEnabled()) {
+        if (!$this->rememberEnabled() || empty($_COOKIE[self::REMEMBER_COOKIE])) {
             return;
         }
 
-        if (empty($_COOKIE[self::REMEMBER_COOKIE])) {
-            return;
-        }
-
-        $tokenHash = $this->hashToken($_COOKIE[self::REMEMBER_COOKIE]);
-        $user      = $this->userModel->getByRememberToken($tokenHash);
+        $user = $this->authService->consumeRememberToken($_COOKIE[self::REMEMBER_COOKIE]);
 
         if (!$user) {
-            $this->userModel->clearRememberToken(0);
             setcookie(self::REMEMBER_COOKIE, '', $this->cookieOptions(-3600));
             return;
         }
@@ -153,9 +123,10 @@ class AuthController
             return;
         }
 
-        if (time() - ($_SESSION['last_activity'] ?? time()) > $this->sessionTimeout()) {
-            $userId = $_SESSION['user_id'];
-            $this->userModel->clearRememberToken((int) $userId);
+        $timeout = (int) env('SESSION_TIMEOUT', 1800);
+
+        if (time() - ($_SESSION['last_activity'] ?? time()) > $timeout) {
+            $this->authService->clearRememberToken((int) $_SESSION['user_id']);
             if (isset($_COOKIE[self::REMEMBER_COOKIE])) {
                 setcookie(self::REMEMBER_COOKIE, '', $this->cookieOptions(-3600));
             }
@@ -172,105 +143,30 @@ class AuthController
 
     public function forgotPassword(): void
     {
-        $smtpHost     = $_ENV['SMTP_HOST']     ?? null;
-        $smtpUsername = $_ENV['SMTP_USERNAME'] ?? null;
-        $smtpPassword = $_ENV['SMTP_PASSWORD'] ?? null;
-        $smtpPort     = $_ENV['SMTP_PORT']     ?? null;
-
-        if (!$smtpHost || !$smtpUsername || !$smtpPassword || !$smtpPort) {
-            die('Error: SMTP environment variables are not configured.');
-        }
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnrecuperar'])) {
             $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-            $user  = $this->userModel->getByEmail($email);
+            $token = $this->authService->createPasswordResetToken($email);
 
-            if (!$user) {
+            if (!$token) {
                 $_SESSION['message'] = 'Email not registered in the system';
                 $_SESSION['icon']    = 'error';
                 header('Location: ' . APP_URL . '/forgot-password');
                 exit;
             }
 
-            $token   = bin2hex(random_bytes(32));
-            $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
+            $resetUrl = APP_URL . '/reset-password?token=' . urlencode($token);
+            $sent     = $this->mailerService->sendResetEmail($email, $resetUrl);
 
-            $stmt = $this->connection->prepare(
-                "INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)"
-            );
-            $stmt->bind_param("sss", $email, $token, $expires);
-            $stmt->execute();
-            $stmt->close();
-
-            $mail = new PHPMailer(true);
-
-            try {
-                $mail->SMTPDebug = SMTP::DEBUG_OFF;
-                $mail->isSMTP();
-                $mail->Host       = $smtpHost;
-                $mail->SMTPAuth   = true;
-                $mail->Username   = $smtpUsername;
-                $mail->Password   = $smtpPassword;
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port       = (int) $smtpPort;
-                $mail->CharSet    = 'UTF-8';
-
-                $mail->setFrom($smtpUsername, 'Password Recovery');
-                $mail->addAddress($email);
-
-                $resetLink = APP_URL . '/reset-password?token=' . urlencode($token);
-
-                $mail->isHTML(true);
-                $mail->Subject = 'Password Recovery';
-                $mail->Body    = "
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <style>
-                            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                            .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; border-radius: 10px; }
-                            .header { background: #2d3748; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
-                            .content { background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                            .button { display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
-                            .warning { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 5px; margin-top: 20px; font-size: 13px; }
-                            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class='container'>
-                            <div class='header'><h1 style='margin:0;'>Password Recovery</h1></div>
-                            <div class='content'>
-                                <p>Hello,</p>
-                                <p>We received a request to reset your account password. If you did not make this request, you can ignore this email.</p>
-                                <div style='text-align:center;'>
-                                    <a href='{$resetLink}' class='button' style='color:white;'>Reset Password</a>
-                                </div>
-                                <p>Or copy and paste the following link in your browser:</p>
-                                <p style='word-break:break-all; font-size:14px; color:#666;'>{$resetLink}</p>
-                                <div class='warning'>
-                                    <strong>Important!</strong>
-                                    <p style='margin:5px 0 0 0;'>This link will expire in 1 hour for security reasons.</p>
-                                </div>
-                            </div>
-                            <div class='footer'>
-                                <p>This is an automated email, please do not reply.</p>
-                                <p>&copy; " . date('Y') . " Your System. All rights reserved.</p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>";
-
-                $mail->send();
+            if ($sent) {
                 $_SESSION['message'] = 'A recovery link has been sent to your email';
                 $_SESSION['icon']    = 'success';
                 header('Location: ' . APP_URL . '/');
-                exit;
-            } catch (Exception $e) {
-                $_SESSION['message'] = 'Failed to send email: ' . $mail->ErrorInfo;
+            } else {
+                $_SESSION['message'] = 'Failed to send recovery email';
                 $_SESSION['icon']    = 'error';
                 header('Location: ' . APP_URL . '/forgot-password');
-                exit;
             }
+            exit;
         }
 
         include __DIR__ . '/../../../views/auth/forgot_password.php';
@@ -290,33 +186,17 @@ class AuthController
                 exit;
             }
 
-            $stmt = $this->connection->prepare(
-                "SELECT email FROM password_resets
-                 WHERE token = ? AND expires_at > NOW() AND used = 0
-                 ORDER BY created_at DESC LIMIT 1"
-            );
-            $stmt->bind_param("s", $token);
-            $stmt->execute();
-            $reset = $stmt->get_result()->fetch_assoc();
-            $stmt->close();
+            $email = $this->authService->consumeResetToken($token, $newPassword);
 
-            if ($reset) {
-                $this->userModel->updatePassword($reset['email'], $newPassword);
-
-                $stmtMark = $this->connection->prepare("UPDATE password_resets SET used = 1 WHERE token = ?");
-                $stmtMark->bind_param("s", $token);
-                $stmtMark->execute();
-                $stmtMark->close();
-
+            if ($email) {
                 $_SESSION['message'] = 'Password updated successfully';
                 $_SESSION['icon']    = 'success';
                 header('Location: ' . APP_URL . '/login');
-                exit;
+            } else {
+                $_SESSION['message'] = 'Invalid or expired token';
+                $_SESSION['icon']    = 'error';
+                header('Location: ' . APP_URL . '/reset-password?token=' . urlencode($token));
             }
-
-            $_SESSION['message'] = 'Invalid or expired token';
-            $_SESSION['icon']    = 'error';
-            header('Location: ' . APP_URL . '/reset-password?token=' . urlencode($token));
             exit;
         }
 
