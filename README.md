@@ -1,39 +1,37 @@
 <div align="center">
 
-# Authentication and Password Recovery System
+# SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.4.0)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.5.0)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
-[![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.0-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
+[![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 
-PHP web application implementing a secure authentication system with bcrypt password hashing and email-based password recovery.
+Custom PHP MVC authentication system built with Composer, a lightweight router, and role-based access control.
 
 </div>
 
 ## Features
 
+- Custom MVC architecture — `App\Core\Router`, abstract `Controller` and `Model`, PSR-4 autoloading via Composer
 - Secure login with bcrypt password hashing (`password_hash()` / `password_verify()`)
-- Password recovery via email with expiring single-use tokens
-- Admin user management (create, edit, delete)
+- Persistent login via **Remember Me** — `HttpOnly` / `SameSite=Strict` cookie; token stored as SHA-256 hash in DB
+- Automatic **session timeout** on inactivity with remember cookie cleanup
+- Password recovery via email with expiring single-use tokens (PHPMailer + STARTTLS)
+- Admin user management — full CRUD with role-based access control (`AuthMiddleware`)
+- `App\Config\Database` singleton — single `\mysqli` connection per request
+- File-based cache for the users listing with automatic invalidation on writes
 - SweetAlert2 toast notifications for all CRUD and authentication actions
-- SweetAlert2 confirmation dialog for user deletion in `/users`
-- Front controller architecture with clean URL routing
-- OOP controllers (`AuthController`, `UserController`) with thin delegator pattern
-- OOP model layer with MySQLi prepared statements
-- Shared view helpers (`renderView`, `renderProtectedView`) for consistent template rendering
-- PHPMailer integration for transactional email (STARTTLS)
-- Consistent color palette via CSS variables (`--color-dark`, `--color-accent`)
-- File-based cache for admin user listing with automatic invalidation on create/edit/delete
-- Graceful cache fallback: if `storage/cache` is not writable, the app continues without cache and logs a warning
-- **Remember Me** — persistent login via secure `HttpOnly` / `SameSite=Strict` cookie; token stored as SHA-256 hash in DB; TTL configurable via `REMEMBER_ME_TTL`
-- **Session Timeout** — automatic session expiry after configurable inactivity period (`SESSION_TIMEOUT`); remember cookie also cleared on timeout to prevent immediate re-login
+- Per-page asset injection — `$pageStyles` / `$pageScripts` arrays in shared layouts
+- Shared layout system — `header.php` / `footer.php` accept `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`
+- App version displayed in footer via `APP_VERSION` env var
 
 ## Requirements
 
 - PHP >= 8.2
 - MySQL / MariaDB
-- Apache (XAMPP recommended)
+- Apache with `mod_rewrite` (XAMPP recommended)
+- Composer
 - Gmail account with an App Password (or any SMTP provider)
 
 ## Installation
@@ -45,7 +43,13 @@ git clone https://github.com/Jandres25/Encriptacion_PHP.git
 cd Encriptacion_PHP
 ```
 
-2. Copy and configure the environment file:
+2. Install dependencies:
+
+```bash
+composer install
+```
+
+3. Copy and configure the environment file:
 
 ```bash
 cp .env.example .env
@@ -64,8 +68,9 @@ SMTP_USERNAME=your@gmail.com
 SMTP_PASSWORD=your_app_password
 SMTP_PORT=587
 
-APP_URL=http://localhost/Encriptacion_PHP
+APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
+APP_VERSION=1.5.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -76,150 +81,126 @@ REMEMBER_ME_TTL=2592000
 SESSION_TIMEOUT=1800
 ```
 
-`CACHE_TTL_USERS` defines (in seconds) how long the `/users` list stays cached.
-The `storage/cache` directory must be writable by your web server user.
-`REMEMBER_ME_TTL` is the remember-me cookie and token lifetime in seconds (default 30 days).
-`SESSION_TIMEOUT` is the inactivity limit in seconds before the session is destroyed (default 30 min).
-
-3. Import the database schema:
+4. Import the database schema:
 
 ```bash
 mysql -u root -p < database/schema.sql
 ```
 
-4. (Optional) Load sample data:
+5. (Optional) Load sample data:
 
 ```bash
 mysql -u root -p < database/seeds.sql
 ```
 
-5. Place the project in your server's web root (e.g. `htdocs/` in XAMPP) and open `APP_URL` in your browser.
+6. Place the project in your server's web root (e.g. `htdocs/` in XAMPP) and open `APP_URL` in your browser.
 
 ## Project Structure
 
 ```
 ├── app/
 │   ├── Config/
-│   │   ├── autoload.php       # Bootstrap entry point
+│   │   ├── autoload.php       # Bootstrap: timezone, cache, DB, session, restoreFromCookie()
 │   │   ├── cache.php          # Cache bootstrap + appCache() helper
-│   │   ├── config.php         # Loads .env, defines APP_URL
-│   │   ├── database.php       # MySQLi connection ($connection)
-│   │   └── view_helpers.php   # renderView() / renderProtectedView()
+│   │   ├── config.php         # Loads .env via phpdotenv; defines APP_URL + env()
+│   │   └── database.php       # Database singleton — Database::getConnection()
 │   ├── Controller/
-│   │   ├── auth/
-│   │   │   ├── AuthController.php   # App\Controller\Auth\AuthController — all auth logic
-│   │   │   ├── login.php            # Thin delegator → AuthController::login()
-│   │   │   ├── logout.php           # Thin delegator → AuthController::logout()
-│   │   │   ├── reset.php            # Thin delegator → AuthController::forgotPassword()
-│   │   │   └── update_password.php  # Thin delegator → AuthController::resetPassword()
-│   │   ├── user/
-│   │   │   ├── UserController.php   # App\Controller\User\UserController — all user CRUD logic
-│   │   │   ├── index.php            # Thin delegator → UserController::index()
-│   │   │   ├── create.php           # Thin delegator → UserController::create()
-│   │   │   ├── edit.php             # Thin delegator → UserController::edit()
-│   │   │   └── delete.php           # Thin delegator → UserController::delete()
-│   │   └── home.php                 # Dashboard controller
-│   └── Model/
-│       └── User.php           # App\Model\User — OOP model with prepared statements
+│   │   ├── AuthController.php  # login, logout, forgotPassword, resetPassword
+│   │   ├── HomeController.php  # Dashboard — applies timeout + auth middleware
+│   │   └── UserController.php  # Full user CRUD — guarded by admin middleware
+│   ├── Core/
+│   │   ├── Auth.php            # Credential verify, remember-me tokens, password reset tokens
+│   │   ├── Controller.php      # Abstract base — render() and redirect()
+│   │   ├── Model.php           # Abstract base — holds protected \mysqli $db
+│   │   └── Router.php          # GET/POST route registration and dispatch
+│   ├── Middleware/
+│   │   └── AuthMiddleware.php  # Static guards: auth(), admin(), timeout()
+│   ├── Model/
+│   │   └── User.php            # All DB queries via MySQLi prepared statements
+│   └── Service/
+│       └── MailerService.php   # PHPMailer encapsulation — SMTP via STARTTLS
 ├── database/
-│   ├── schema.sql         # Table definitions (users + password_resets)
-│   └── seeds.sql          # Sample data
+│   ├── schema.sql              # Table definitions (users + password_resets)
+│   └── seeds.sql               # Sample data with bcrypt-hashed passwords
 ├── libs/
-│   ├── Cache/             # File-based cache implementation
-│   └── PHPMailer/         # PHPMailer (no Composer)
+│   └── Cache/                  # File-based cache implementation
 ├── public/
-│   ├── css/               # Bootstrap, all.min.css (FontAwesome), estilo.css, layout-protected.css
-│   ├── DataTables/        # DataTables combined bundle (datatables.js)
-│   ├── img/               # Images and icons
-│   ├── js/                # jQuery, Bootstrap JS, Popper, sweetalert2.all.min.js, users-table.js, users-delete.js
-│   ├── webfonts/          # FontAwesome webfonts (used by all.min.css)
-│   ├── .htaccess          # Apache rewrite rules for clean URLs
-│   └── index.php          # Front controller — routes by path (/login, /users, ...)
+│   ├── css/                    # bootstrap.css, estilo.css, all.min.css, layout-protected.css
+│   ├── DataTables/             # DataTables JS bundle + Bootstrap 4 skin
+│   ├── img/                    # Images and icons
+│   ├── js/                     # jQuery, Bootstrap JS, Popper, SweetAlert2, users-*.js
+│   ├── webfonts/               # FontAwesome webfonts
+│   ├── .htaccess               # Apache rewrite rules for clean URLs
+│   └── index.php               # Front controller
+├── routes/
+│   └── web.php                 # All route definitions
 ├── storage/
-│   └── cache/             # Runtime cache files (*.cache)
+│   └── cache/                  # Runtime cache files (*.cache)
 ├── views/
-│   ├── auth/              # login, forgot_password, reset_password
-│   ├── layouts/           # shared header/footer and messages.php for notifications
-│   ├── user/              # index, create, edit
-│   ├── home/              # home/index.php
-│   │   └── index.php      # Dashboard view
-├── .env.example           # Environment variable template
-└── database/schema.sql    # Source of truth for DB schema
+│   ├── auth/                   # login, forgot_password, reset_password (standalone)
+│   ├── home/                   # index.php — dashboard content (wrapped by shared layout)
+│   ├── layouts/                # header.php, footer.php, messages.php
+│   └── user/                   # index, create, edit (wrapped by shared layout)
+├── .env.example                # Environment variable template
+└── composer.json               # Composer dependencies and PSR-4 autoload
 ```
 
 ## Usage
 
-1. Open `http://localhost/Encriptacion_PHP/` in your browser
-2. Log in with a seeded user (e.g. username `Admin`, password `123456`)
+1. Open `http://localhost/Encriptacion_PHP/public/` in your browser
+2. Log in with a seeded user (e.g. username `Admin`, password `Admin1234`)
 3. Admin users (`is_admin = 1`) see the **Users** link in the nav → full CRUD
 4. To recover a password, click "Forgot your password?" on the login page
 
 ## URL Routing
 
-The app uses a single front controller (`public/index.php`) with clean URL paths:
+All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 
-| URL                         | Page                   |
-| --------------------------- | ---------------------- |
-| `/`                         | Dashboard              |
-| `/login`                    | Login                  |
-| `/forgot-password`          | Forgot password        |
-| `/reset-password?token=...` | Reset password         |
-| `/users`                    | User list (admin only) |
-| `/users/create`             | Create user            |
-| `/users/edit?id=X`          | Edit user              |
-| `/users/delete?id=X`        | Delete user            |
+| URL                         | Controller method                  |
+| --------------------------- | ---------------------------------- |
+| `/`                         | `HomeController::index()`          |
+| `/login`                    | `AuthController::login()`          |
+| `/logout`                   | `AuthController::logout()`         |
+| `/forgot-password`          | `AuthController::forgotPassword()` |
+| `/reset-password?token=...` | `AuthController::resetPassword()`  |
+| `/users`                    | `UserController::index()`          |
+| `/users/create`             | `UserController::create()`         |
+| `/users/edit?id=X`          | `UserController::edit()`           |
+| `/users/delete?id=X`        | `UserController::delete()`         |
 
 ## Security
 
 - Passwords hashed with bcrypt (`PASSWORD_DEFAULT`)
 - Session set only after successful `password_verify()`
-- Reset tokens: 256-bit, 1-hour expiry, single-use
+- Reset tokens: 256-bit (`bin2hex(random_bytes(32))`), 1-hour expiry, single-use
 - All DB queries via MySQLi prepared statements
 - Email validated with `filter_var()` before DB lookup
 - SMTP with STARTTLS (port 587)
-- Remember-me tokens: raw token in cookie, SHA-256 hash in DB — never stored in clear text; cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS
-- Session timeout: inactivity expiry enforced on every protected request; clears remember cookie to prevent silent re-login after expiry
+- Remember-me: raw token in cookie, SHA-256 hash in DB — cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS
+- Session timeout enforced on every protected request; clears remember cookie to prevent silent re-login
 
 ## Cache
 
-- Cached endpoint: `/users` user listing (`App\Model\User::getAll()`)
-- Cache key: fixed key (`users.all`), so requests rewrite the same cache file instead of creating unlimited files
-- Invalidation: cache is cleared after create, edit, delete, and password update operations
-- Controls:
-  - `CACHE_ENABLED=true|false`
-  - `CACHE_TTL_USERS=<seconds>` (e.g., `600` for 10 minutes)
+- Cached endpoint: `/users` listing (`App\Model\User::getAll()`)
+- Cache key: `users.all`
+- Invalidation: on create, edit, delete, and password update
+- Controls: `CACHE_ENABLED=true|false`, `CACHE_TTL_USERS=<seconds>`
 - Storage: `storage/cache/*.cache`
-- If the directory is not writable, the app disables cache for the request and logs a warning (no HTTP 500)
-
-### How to verify cache performance
-
-1. Open Firefox DevTools (`F12`) → **Red** tab.
-2. Open `/users` and note the request **Duración**.
-3. Reload several times within TTL: the first request is usually slower; the next ones should be faster.
-4. Set `CACHE_ENABLED=false`, reload again, and compare durations.
-
-## Rendering and Layout
-
-- Protected pages use `renderProtectedView()` from `app/Config/view_helpers.php`.
-- Shared protected layout lives in `views/layouts/header.php` and `views/layouts/footer.php`.
-- DataTables initialization for the users table was moved to `public/js/users-table.js`.
-- User deletion confirmation in `views/user/index.php` is handled by `public/js/users-delete.js` (SweetAlert2).
-- Full-height protected layout behavior is in `public/css/layout-protected.css`.
+- If the directory is not writable, cache is disabled for the request and a warning is logged (no HTTP 500)
 
 ## Contributing
 
 1. Fork the project
 2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -m 'Add my feature'`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
+3. Commit your changes following [Conventional Commits](https://www.conventionalcommits.org/)
+4. Push and open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License — see the `LICENSE` file for details.
+MIT License — see the `LICENSE` file for details.
 
 ## Contact
 
-Jandres25 - jandrespb4@gmail.com
+Jandres25 — jandrespb4@gmail.com
 
 Project link: [https://github.com/Jandres25/Encriptacion_PHP](https://github.com/Jandres25/Encriptacion_PHP)

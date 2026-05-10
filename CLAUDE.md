@@ -4,27 +4,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PHP web application implementing a secure authentication system with bcrypt password hashing and email-based password recovery via PHPMailer.
+Custom PHP MVC authentication system built with Composer, a lightweight router, and role-based access control.
 
-- **Server:** XAMPP (Apache + MySQL) at `http://localhost/Encriptacion_PHP/`
+- **Server:** XAMPP (Apache + MySQL) at `http://localhost/Encriptacion_PHP/public`
 - **PHP:** >= 8.2
 - **Database:** MySQL/MariaDB (import `database/schema.sql` to initialize)
-- **Dependencies:** PHPMailer (bundled in `libs/PHPMailer/`)
+- **Dependencies:** Composer — `phpmailer/phpmailer`, `vlucas/phpdotenv`, `phpunit/phpunit` (dev)
 
 ## Setup
 
 ```bash
-# 1. Copy environment config
+# 1. Install dependencies
+composer install
+
+# 2. Copy environment config
 cp .env.example .env
 # Edit .env with your DB credentials and SMTP settings
 
-# 2. Import database schema
+# 3. Import database schema
 mysql -u root -p < database/schema.sql
 
-# 3. (Optional) Load seed data
+# 4. (Optional) Load seed data
 mysql -u root -p < database/seeds.sql
 
-# 4. Start XAMPP Apache and MySQL services
+# 5. Start XAMPP Apache and MySQL services
 ```
 
 No build step needed — PHP files are served directly by Apache.
@@ -42,8 +45,9 @@ SMTP_USERNAME=your@email.com
 SMTP_PASSWORD=your_app_password
 SMTP_PORT=587
 
-APP_URL=http://localhost/Encriptacion_PHP
+APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
+APP_VERSION=1.5.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -54,8 +58,9 @@ REMEMBER_ME_TTL=2592000
 SESSION_TIMEOUT=1800
 ```
 
-The `.env` file is loaded by `loadEnv()` in `app/Config/config.php`, which also defines the `APP_URL` constant and `$url` variable. There is no Composer autoload for dotenv.
+The `.env` file is loaded by `vlucas/phpdotenv` in `app/Config/config.php`, which also defines the `APP_URL` constant and the `env()` helper.
 
+- `APP_VERSION` — displayed in the shared footer
 - `REMEMBER_ME_ENABLED` — enable/disable persistent login via cookie (default `true`)
 - `REMEMBER_ME_TTL` — cookie + token lifetime in seconds (default `2592000` = 30 days)
 - `SESSION_TIMEOUT` — inactivity expiry in seconds (default `1800` = 30 min)
@@ -65,58 +70,59 @@ The `.env` file is loaded by `loadEnv()` in `app/Config/config.php`, which also 
 ### Request Flow
 
 ```
-Browser → public/index.php (front controller) → app/Controller/auth/*.php or app/Controller/user/*.php
-       → AuthController / UserController → views/*.php
+Browser → public/index.php → App\Core\Router → Controller::method()
+       → App\Core\Controller::render() → views/layouts/header.php + view + views/layouts/footer.php
 ```
 
-`public/index.php` supports clean URLs and dispatches to the matching thin delegator file. It first uses `$_GET['page']` when present, otherwise resolves from `REQUEST_URI` (stripping the app base path). Each delegator instantiates the module's controller class and calls the corresponding method, which handles GET (render view) and POST (process form).
+`public/index.php` bootstraps autoload, creates the router with the DB connection, loads `routes/web.php`, and dispatches by HTTP method + URI path.
 
 ### URL Scheme
 
-| URL                         | Controller                             |
-| --------------------------- | -------------------------------------- |
-| `/login`                    | `app/Controller/auth/login.php`           |
-| `/logout`                   | `app/Controller/auth/logout.php`          |
-| `/forgot-password`          | `app/Controller/auth/reset.php`           |
-| `/reset-password?token=...` | `app/Controller/auth/update_password.php` |
-| `/` (default)               | `app/Controller/home.php`                 |
-| `/users`                    | `app/Controller/user/index.php`           |
-| `/users/create`             | `app/Controller/user/create.php`          |
-| `/users/edit?id=X`          | `app/Controller/user/edit.php`            |
-| `/users/delete?id=X`        | `app/Controller/user/delete.php`          |
+| URL                         | Controller method                  |
+| --------------------------- | ---------------------------------- |
+| `/`                         | `HomeController::index()`          |
+| `/login`                    | `AuthController::login()`          |
+| `/logout`                   | `AuthController::logout()`         |
+| `/forgot-password`          | `AuthController::forgotPassword()` |
+| `/reset-password?token=...` | `AuthController::resetPassword()`  |
+| `/users`                    | `UserController::index()`          |
+| `/users/create`             | `UserController::create()`         |
+| `/users/edit?id=X`          | `UserController::edit()`           |
+| `/users/delete?id=X`        | `UserController::delete()`         |
 
 ### Key Files
 
-| Path                                                    | Purpose                                                                                                                                   |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/index.php`                                      | Front controller — loads autoload, dispatches by path (session_start moved to autoload)                                                   |
-| `public/.htaccess`                                      | Apache rewrite rules: non-file/non-directory requests route to `public/index.php`                                                         |
-| `app/Config/config.php`                                 | Loads `.env` with `loadEnv()` + `env()`; defines `APP_URL` constant and `$url`                                                            |
-| `app/Config/database.php`                               | Creates `$connection` MySQLi using `env()` helper                                                                                         |
-| `app/Config/view_helpers.php`                           | Shared render helpers: `renderView()` and `renderProtectedView()`                                                                         |
-| `app/Config/cache.php`                                  | Cache bootstrap; exposes `appCache()` and graceful fallback when cache directory is not writable                                          |
-| `app/Config/autoload.php`                               | Bootstrap entry point; includes view helpers + cache + database; calls `session_start()` and `AuthController::restoreFromCookie()`        |
-| `app/Model/User.php`                                    | OOP model (`App\Model\User`); all DB queries via prepared statements                                                                      |
-| `app/Controller/auth/AuthController.php`                | `App\Controller\Auth\AuthController` — all auth logic: `login()`, `logout()`, `forgotPassword()`, `resetPassword()`, `restoreFromCookie()`, `checkSessionTimeout()` |
-| `app/Controller/auth/login.php`                         | Thin delegator → `AuthController::login()`                                                                                                |
-| `app/Controller/auth/logout.php`                        | Thin delegator → `AuthController::logout()`                                                                                               |
-| `app/Controller/auth/reset.php`                         | Thin delegator → `AuthController::forgotPassword()`                                                                                       |
-| `app/Controller/auth/update_password.php`               | Thin delegator → `AuthController::resetPassword()`                                                                                        |
-| `app/Controller/home.php`                               | Calls `checkSessionTimeout()`, auth check, sets `$name`/`$isAdmin`/`$year`, includes dashboard view                                       |
-| `app/Controller/user/UserController.php`                | `App\Controller\User\UserController` — all user CRUD logic + `requireAuth()` / `requireAdmin()` guards                                    |
-| `app/Controller/user/index.php`                         | Thin delegator → `UserController::index()`                                                                                                |
-| `app/Controller/user/create.php`                        | Thin delegator → `UserController::create()`                                                                                               |
-| `app/Controller/user/edit.php`                          | Thin delegator → `UserController::edit()`                                                                                                 |
-| `app/Controller/user/delete.php`                        | Thin delegator → `UserController::delete()`                                                                                               |
-| `views/layouts/header.php` / `views/layouts/footer.php` | Shared nav/footer for protected pages (DataTables, SweetAlert2)                                                                           |
-| `views/layouts/messages.php`                            | Centralized SweetAlert2 toast notification logic                                                                                          |
-| `views/home/index.php`                                  | Dashboard — hero + feature cards; receives `$name`, `$isAdmin`, `$year` from `app/Controller/home.php`                                    |
-| `public/css/estilo.css`                                 | Global styles + CSS palette variables (`--color-dark`, `--color-accent`); loaded by `views/layouts/header.php` and `views/home/index.php` |
-| `public/css/layout-protected.css`                       | Shared full-height layout styles for protected pages (`body` flex + footer push)                                                          |
-| `public/js/users-table.js`                              | DataTables initialization for `views/user/index.php`                                                                                      |
-| `public/js/users-delete.js`                             | SweetAlert2 delete confirmation for user actions in `views/user/index.php`                                                                |
-| `database/schema.sql`                                   | Current DB schema — `users` + `password_resets` tables                                                                                    |
-| `database/seeds.sql`                                    | Sample users with bcrypt-hashed passwords                                                                                                 |
+| Path                                | Purpose                                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `public/index.php`                  | Front controller — bootstraps autoload, router, and dispatches requests                                                        |
+| `public/.htaccess`                  | Apache rewrite rules: non-file/non-directory requests route to `public/index.php`                                              |
+| `routes/web.php`                    | All route definitions — GET/POST mapped to controller methods                                                                  |
+| `app/Config/config.php`             | Loads `.env` via phpdotenv; defines `APP_URL` constant and `env()` helper                                                      |
+| `app/Config/database.php`           | `App\Config\Database` singleton — `Database::getConnection()` returns the shared `\mysqli` instance                            |
+| `app/Config/cache.php`              | Cache bootstrap; exposes `appCache()` with graceful fallback when cache dir is not writable                                    |
+| `app/Config/autoload.php`           | Bootstrap entry point: sets timezone, loads cache + database, starts session, calls `Auth::restoreFromCookie()`                |
+| `app/Core/Router.php`               | `App\Core\Router` — registers GET/POST routes, strips APP_URL base path, dispatches to controller                              |
+| `app/Core/Controller.php`           | Abstract base — `render(string $view, array $data, bool $protected)` and `redirect(string $path)`                              |
+| `app/Core/Model.php`                | Abstract base — holds `protected \mysqli $db`                                                                                  |
+| `app/Core/Auth.php`                 | `App\Core\Auth` — credential verify, remember-me token issue/consume/clear, password reset tokens, `restoreFromCookie()`       |
+| `app/Middleware/AuthMiddleware.php` | Static guards: `auth()`, `admin()`, `timeout(\mysqli)`                                                                         |
+| `app/Controller/AuthController.php` | All auth logic: login, logout, forgotPassword, resetPassword                                                                   |
+| `app/Controller/HomeController.php` | Dashboard: applies timeout + auth middleware, renders home view                                                                |
+| `app/Controller/UserController.php` | Full user CRUD — guarded by `admin()` middleware                                                                               |
+| `app/Model/User.php`                | `App\Model\User` — all DB queries via MySQLi prepared statements                                                               |
+| `app/Service/MailerService.php`     | PHPMailer encapsulation — SMTP via STARTTLS                                                                                    |
+| `views/layouts/header.php`          | Shared `<head>` + nav for all protected pages; accepts `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`, `$pageStyles` |
+| `views/layouts/footer.php`          | Shared footer with version; accepts `$useDataTables`, `$pageScripts`                                                           |
+| `views/layouts/messages.php`        | Centralized SweetAlert2 toast notification logic                                                                               |
+| `views/home/index.php`              | Dashboard content only (hero + feature cards) — wrapped by shared layout via `protected: true`                                 |
+| `views/auth/`                       | Standalone auth views (login, forgot-password, reset-password) — include their own `<head>`                                    |
+| `views/user/`                       | Protected user CRUD views — wrapped by shared layout                                                                           |
+| `public/css/estilo.css`             | Global styles + CSS palette variables (`--color-dark`, `--color-accent`)                                                       |
+| `public/css/layout-protected.css`   | Full-height flex layout for protected pages                                                                                    |
+| `public/js/users-table.js`          | DataTables initialization — loaded only in `UserController::index()` via `pageScripts`                                         |
+| `public/js/users-delete.js`         | SweetAlert2 delete confirmation — loaded only in `UserController::index()` via `pageScripts`                                   |
+| `database/schema.sql`               | Current DB schema — `users` + `password_resets` tables                                                                         |
+| `database/seeds.sql`                | Sample users with bcrypt-hashed passwords                                                                                      |
 
 ### Session Variables
 
@@ -125,12 +131,12 @@ Set on login (only after successful `password_verify()`), required for all prote
 - `$_SESSION['user_id']` — user ID
 - `$_SESSION['name']` — display name (first_name)
 - `$_SESSION['is_admin']` — boolean, controls admin menu visibility
-- `$_SESSION['last_activity']` — Unix timestamp; updated on every request; used by `checkSessionTimeout()` to enforce inactivity expiry
+- `$_SESSION['last_activity']` — Unix timestamp; updated on every request; used by `AuthMiddleware::timeout()` to enforce inactivity expiry
 
-Flash notifications (used by `views/layouts/messages.php`):
+Flash notifications (rendered by `views/layouts/messages.php`):
 
-- `$_SESSION['message']` — The message text to display in the toast
-- `$_SESSION['icon']` — The SweetAlert2 icon type (`success`, `error`, `warning`, `info`)
+- `$_SESSION['message']` — toast message text
+- `$_SESSION['icon']` — SweetAlert2 icon type (`success`, `error`, `warning`, `info`)
 
 ### Database Tables
 
@@ -157,23 +163,31 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 
 `public/css/bootstrap.css` + `public/js/bootstrap.min.js` + `public/js/popper.min.js`. `bootstrap.bundle.js` and `bootstrap.js` were removed.
 
+**Load order:** `bootstrap.css` must be loaded before `estilo.css` so that `.btn-app-primary` overrides Bootstrap's `.btn` defaults correctly.
+
 ### DataTables
 
-`public/DataTables/datatables.js` (combined bundle only). `datatables.min.css` and `datatables.min.js` were removed.
+Loaded **only** on `views/user/index.php` via `$useDataTables = true` (CSS in header) and the DataTables JS bundle in footer. App-specific scripts (`users-table.js`, `users-delete.js`) are passed via `$pageScripts` in `UserController::index()`.
 
-### Templates vs standalone views
+### Per-page assets in layouts
 
-- **Protected pages** (`views/user/`) use `views/layouts/header.php` + `views/layouts/footer.php` — includes all shared assets and DataTables init script
-- **Auth views** (`views/auth/`) and **dashboard** (`views/home/index.php`) are standalone — they include their own `<head>` assets directly
+`header.php` and `footer.php` support opt-in per-page assets:
+
+- `$pageStyles` — array of CSS paths (relative to `APP_URL`) injected in `<head>` after DataTables CSS
+- `$pageScripts` — array of JS paths (relative to `APP_URL`) injected in footer after DataTables JS
+- `$useDataTables` — bool (default `false`) — enables DataTables CSS + JS bundle
+- `$pageTitle` — string (default `'SecureAuth'`) — browser tab title
+- `$favicon` — filename in `public/img/` (default `'usuario.png'`)
+- `$bodyClass` — string added to `<body class="...">` (e.g. `'dashboard'`); also suppresses `mt-3` on `<main>`
 
 ### Cache
 
-- Cache implementation: `libs/Cache/FileCache.php` + `app/Config/cache.php`
+- Implementation: `libs/Cache/FileCache.php` + `app/Config/cache.php`
 - Cached query: users listing (`App\Model\User::getAll()`) with key `users.all`
-- TTL control: `CACHE_TTL_USERS` (seconds)
+- TTL: `CACHE_TTL_USERS` (seconds)
 - Enable/disable: `CACHE_ENABLED=true|false`
-- Invalidation occurs on `create`, `update`, `delete`, and `updatePassword` in `app/Model/User.php`
-- Runtime files are stored in `storage/cache/*.cache`
+- Invalidation: on `create`, `update`, `delete`, `updatePassword` in `app/Model/User.php`
+- Runtime files: `storage/cache/*.cache`
 - If the cache directory is not writable, cache is disabled for the request and a warning is logged (no HTTP 500)
 
 ## Security Patterns
@@ -182,22 +196,18 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 - Session variables assigned only after successful `password_verify()` — never on failed login
 - Reset tokens: `bin2hex(random_bytes(32))` — 256-bit, 1-hour expiry, single-use (`used = 1` after consumption)
 - All DB queries in `app/Model/User.php` use MySQLi prepared statements
-- Password resets use MySQLi prepared statements
 - Email sanitized with `filter_var($email, FILTER_SANITIZE_EMAIL)` before DB queries
 - SMTP uses STARTTLS encryption (port 587)
-- Remember-me tokens: `bin2hex(random_bytes(32))` stored raw in cookie; SHA-256 hash stored in DB (`remember_token`). Cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS. TTL controlled by `REMEMBER_ME_TTL` (default 30 days). Cleared on logout and on session expiry
-- Session timeout: `checkSessionTimeout()` called on every protected request; destroys session + clears remember cookie if `SESSION_TIMEOUT` seconds of inactivity exceeded (default 30 min)
+- Remember-me tokens: `bin2hex(random_bytes(32))` stored raw in cookie; SHA-256 hash stored in DB. Cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS. TTL controlled by `REMEMBER_ME_TTL`. Cleared on logout and on session expiry
+- Session timeout: `AuthMiddleware::timeout()` called on every protected request; destroys session + clears remember cookie if `SESSION_TIMEOUT` seconds of inactivity exceeded
 
 ## Notes
 
-- PHPMailer is included directly from `libs/PHPMailer/src/` — not via Composer autoload
-- All asset paths (CSS, JS, images) use the `APP_URL` constant via `<?= APP_URL ?>` short-tag syntax
-- `AuthController` namespace is `App\Controller\Auth`; `UserController` namespace is `App\Controller\User`
-- `use App\Model\User;` inside controller classes is file-scoped and works correctly when the class file is `require_once`'d by the thin delegator
-- `views/home/index.php` uses `class="dashboard"` on `<body>` to activate the flex column layout defined in `estilo.css`
+- PHPMailer is loaded via Composer autoload (`phpmailer/phpmailer`)
+- All asset paths use the `APP_URL` constant via `<?= APP_URL ?>` short-tag syntax
+- `App\Config\Database::getConnection()` is a singleton — the same `\mysqli` instance is reused across all controllers and models within a request
+- `views/home/index.php` contains only content markup (no `<html>`/`<head>`/`<body>`) — it is wrapped by the shared layout via `Controller::render(..., protected: true)`
 - Error/success messages use unified session flash: `$_SESSION['message']` and `$_SESSION['icon']`. Rendered via `views/layouts/messages.php`. Never pass them via URL query params
 - Auth views use `<button type="submit">` (not `<input type="submit">`); POST detection uses `isset($_POST['btnXXX'])` — not `!empty()` — since `<button>` without a `value` attribute submits an empty string
-- `.btn-anchor` in `public/css/style.css` — apply alongside `.btn` on `<a>` elements for correct vertical centering; do not rely on the `a.btn` selector
-- User delete flow in `views/user/index.php` uses `.js-delete-user` buttons with `data-delete-url`, `data-name`, and `data-username`; confirmation is handled in `public/js/users-delete.js` (no Bootstrap delete modals)
-- `session_start()` is called inside `app/Config/autoload.php` (not in `public/index.php`); `AuthController::restoreFromCookie()` runs immediately after on every request to restore session from a valid remember-me cookie
-- Login form (`views/auth/login.php`) includes `<input type="checkbox" name="remember" value="1">` for Remember Me; only processed when `REMEMBER_ME_ENABLED=true`; styled with `.remember-label` in `public/css/style.css`
+- User delete flow uses `.js-delete-user` buttons with `data-delete-url`, `data-name`, `data-username`; confirmation handled in `public/js/users-delete.js`
+- `session_start()` is called in `app/Config/autoload.php`; `Auth::restoreFromCookie()` runs immediately after on every request

@@ -6,6 +6,32 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.5.0] — 2026-05-10
+
+### Added
+
+- `App\Config\Database` singleton class — `Database::getConnection()` returns the same `\mysqli` instance across the entire request; `$connection` variable preserved for backward compatibility
+- `APP_VERSION` environment variable displayed in the shared footer (`views/layouts/footer.php`)
+- Per-page asset injection in shared layouts:
+  - `$pageStyles` — array of CSS paths injected in `<head>` (after DataTables CSS)
+  - `$pageScripts` — array of JS paths injected in footer (after DataTables JS)
+- `$pageTitle`, `$favicon`, `$bodyClass` variables accepted by `views/layouts/header.php`
+- `$bodyClass` suppresses `mt-3` on `<main>` when set (used by dashboard's hero section)
+
+### Changed
+
+- `views/home/index.php` migrated from standalone HTML file to shared layout (`protected: true`) — contains only content markup now
+- `views/layouts/header.php` generalized: accepts `$pageTitle`, `$favicon`, `$bodyClass`; nav now shared (Home, Users if admin, username, Logout) using `$_SESSION` directly
+- `$useDataTables` defaults to `false` — opt-in per controller; DataTables CSS/JS only loads on `UserController::index()`
+- `users-table.js` and `users-delete.js` moved from `footer.php` to `UserController::index()` via `$pageScripts`
+- `bootstrap.css` now loads before `estilo.css` in `header.php` so `.btn-app-primary` correctly overrides Bootstrap defaults
+- `HomeController` passes `bodyClass: 'dashboard'`, `favicon`, and `pageTitle` explicitly
+- `UserController` passes descriptive `pageTitle` for each action (Users, Create User, Edit User)
+- Dashboard feature cards updated to reflect current MVC architecture (Router, Middleware, Composer, remember-me, session timeout)
+- `composer.json` — removed stale `app/Config/view_helpers.php` from `files` autoload array
+
+---
+
 ## [1.4.0] — 2026-05-02
 
 ### Added

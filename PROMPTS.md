@@ -39,24 +39,27 @@ Actúa como desarrollador PHP Senior especializado en arquitectura MVC
 y seguridad web (autenticación, hashing, sesiones).
 
 [Contexto]
-Proyecto: Encriptacion_PHP — PHP MVC custom (sin framework).
-Stack: Bootstrap 5, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
-Servidor: XAMPP (Apache + MySQL) en http://localhost/Encriptacion_PHP/
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: Bootstrap 4, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
+Servidor: XAMPP (Apache + MySQL) en http://localhost/Encriptacion_PHP/public
 Módulo activo: _______________
 
 [Tarea]
 _______________
 
 [Restricciones]
-- Seguir el patrón MVC existente: thin delegators en app/Controller/ + clases Controller + Model en app/Model/
-- Front controller en public/index.php — rutas via $_GET['page'] o REQUEST_URI
-- Variables de entorno via env() definido en app/Config/config.php — nunca $_ENV directamente
-- Conexión DB: $connection de app/Config/database.php — MySQLi con prepared statements siempre
-- Flash notifications: $_SESSION['message'] + $_SESSION['icon'] renderizados en views/layouts/messages.php
-- Assets via <?= APP_URL ?> — nunca rutas relativas
+- Arquitectura MVC: App\Core\Router despacha a Controller::method(); rutas declaradas en routes/web.php
+- Controladores en app/Controller/ extienden App\Core\Controller (render + redirect)
+- Modelos en app/Model/ extienden App\Core\Model (protected \mysqli $db)
+- Conexión DB: App\Config\Database::getConnection() — singleton, MySQLi con prepared statements siempre
+- Variables de entorno via env() definido en app/Config/config.php
+- Guards: AuthMiddleware::auth(), AuthMiddleware::admin(), AuthMiddleware::timeout() — llamar al inicio de cada método
+- Flash notifications: $_SESSION['message'] + $_SESSION['icon'] renderizados en views/layouts/messages.php — nunca pasar mensajes por URL
+- Vistas protegidas: Controller::render($view, $data, protected: true) — wrappea con header.php + footer.php
+- Assets via APP_URL — nunca rutas relativas
 - FontAwesome: solo public/css/all.min.css (CSS) — no re-agregar la versión JS
-- Bootstrap: bootstrap.css + bootstrap.min.js + popper.min.js — no usar bootstrap.bundle.js
-- DataTables: solo public/DataTables/datatables.js — no datatables.min.js ni datatables.min.css
+- Bootstrap: bootstrap.css (antes de estilo.css) + bootstrap.min.js + popper.min.js
+- DataTables: pasar useDataTables: true + pageScripts en el render del controller que lo necesite
 - No introducir librerías nuevas sin aprobación
 - Passwords: password_hash() al guardar, password_verify() al validar — nunca MD5/SHA1
 
@@ -76,16 +79,16 @@ Actúa como desarrollador PHP Senior especializado en arquitectura MVC
 y seguridad web (autenticación, hashing, sesiones).
 
 [Contexto]
-Proyecto: Encriptacion_PHP — PHP MVC custom (sin framework).
-Stack: Bootstrap 5, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: Bootstrap 4, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
 Módulo activo: [nombre del módulo — ej: auth, user, home]
 
-Estructura de archivos relevante:
-- app/Controller/[modulo]/[Módulo]Controller.php  ← lógica del módulo
-- app/Controller/[modulo]/[accion].php            ← thin delegator
-- app/Model/[Módulo].php                          ← queries con prepared statements
-- views/[modulo]/[vista].php                      ← HTML de la vista
-- public/js/[script].js                           ← JS del módulo (si aplica)
+Archivos relevantes:
+- app/Controller/[Módulo]Controller.php   ← lógica del módulo
+- app/Model/[Módulo].php                  ← queries con prepared statements
+- views/[modulo]/[vista].php              ← HTML de la vista (solo contenido, sin <html>)
+- public/js/[script].js                   ← JS del módulo (si aplica, pasado via pageScripts)
+- routes/web.php                          ← registro de rutas GET/POST
 
 [Tarea]
 Implementar [nombre exacto del requerimiento].
@@ -93,13 +96,13 @@ Implementar [nombre exacto del requerimiento].
 Descripción: [criterios de aceptación]
 
 [Restricciones]
-- Thin delegators solo instancian el Controller y llaman un método — sin lógica
 - Métodos de controlador: manejan GET (renderizar vista) y POST (procesar formulario) en el mismo método
 - Toda query DB en el Model, nunca en el Controller
-- Flash notifications con $_SESSION['message'] + $_SESSION['icon'] — nunca pasar mensajes por URL
+- Flash notifications con $_SESSION['message'] + $_SESSION['icon'] — nunca por URL
 - Detección de POST: isset($_POST['btnXXX']) — no !empty() — porque <button> sin value envía string vacío
-- Guards de autenticación: requireAuth() y requireAdmin() en UserController como referencia
-- Invalidar caché en operaciones write: llamar appCache()->delete('users.all') o el key correspondiente
+- Guards al inicio del método: AuthMiddleware::timeout() + AuthMiddleware::admin() o auth()
+- Invalidar caché en operaciones write: appCache()->delete('users.all') o el key correspondiente
+- Vistas protegidas solo tienen contenido (sin <html>/<head>/<body>) — el layout lo pone render()
 - No agregar comentarios obvios — solo donde el WHY no sea evidente
 
 [Formato de salida]
@@ -122,8 +125,8 @@ Actúa como desarrollador PHP Senior especializado en debugging
 de aplicaciones MVC, sesiones PHP y MySQL.
 
 [Contexto]
-Proyecto: Encriptacion_PHP — PHP MVC custom (sin framework).
-Stack: PHP 8.2+, MySQLi, Bootstrap 5, SweetAlert2.
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: PHP 8.2+, MySQLi, Bootstrap 4, SweetAlert2.
 Archivo donde ocurre el error: [ruta completa]
 Método/función afectada: [nombre]
 
@@ -164,7 +167,7 @@ Actúa como Tech Lead PHP con experiencia en code review de sistemas MVC,
 seguridad web (OWASP Top 10) y patrones de diseño.
 
 [Contexto]
-Proyecto: Encriptacion_PHP — PHP MVC custom.
+Proyecto: Encriptacion_PHP — PHP MVC con Composer.
 Rama revisada: feature/[nombre]
 Feature implementada: [descripción]
 
@@ -178,9 +181,9 @@ Evalúa específicamente:
 - Seguridad: SQL injection (¿prepared statements?), XSS (¿htmlspecialchars en output?),
   session fixation (¿session_regenerate_id() tras login?), tokens (¿bin2hex(random_bytes(32))?),
   cookies (¿HttpOnly + Secure + SameSite?)
-- Arquitectura: thin delegators sin lógica, queries solo en Model, lógica solo en Controller
+- Arquitectura: queries solo en Model, lógica solo en Controller, guards al inicio de cada método
 - Sesiones: flash messages via $_SESSION['message']+['icon'], nunca por URL params
-- Assets: APP_URL usado, no rutas relativas
+- Assets: APP_URL usado, no rutas relativas; bootstrap.css antes de estilo.css
 - Edge cases que podrían fallar en producción
 
 [Formato de salida]
@@ -201,10 +204,12 @@ Actúa como arquitecto de software PHP con experiencia en sistemas MVC
 custom, seguridad de autenticación y diseño de base de datos.
 
 [Contexto]
-Proyecto: Encriptacion_PHP — PHP MVC custom (sin framework).
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
 BD implementada: users (id, first_name, last_name, email, username, password, is_admin,
                         remember_token, remember_token_expires),
                  password_resets (id, email, token, created_at, expires_at, used).
+Core: App\Core\Router, App\Core\Controller, App\Core\Model, App\Core\Auth
+Middleware: App\Middleware\AuthMiddleware (auth, admin, timeout)
 
 [Tarea]
 Necesito decidir: [describe la decisión técnica]
@@ -214,10 +219,10 @@ Opciones que estoy considerando:
 - Opción B: [describe]
 
 [Restricciones]
-- No introducir frameworks (ni Laravel, ni Symfony)
-- Mantener el front controller en public/index.php — no crear un router independiente
-- Cualquier solución debe funcionar con el autoload actual (app/Config/autoload.php)
-- No introducir Composer ni PSR-4 autoload — PHPMailer se incluye desde libs/ directamente
+- No introducir frameworks (ni Laravel, ni Symfony, ni Slim)
+- Mantener el Router en App\Core\Router y las rutas en routes/web.php
+- Conexión DB via App\Config\Database::getConnection() — no crear conexiones adicionales
+- Cualquier solución debe integrarse con el autoload de Composer (PSR-4 App\ → app/)
 - Considerar impacto en el sistema de caché (libs/Cache/FileCache.php)
 
 [Formato de salida]
@@ -229,10 +234,9 @@ Opciones que estoy considerando:
 
 ---
 
-## Ejemplo real — Remember Me (implementado)
+## Ejemplo real — Remember Me (implementado en v1.4.0)
 
 > Ejemplo de prompt de feature bien estructurado.
-> La feature de "Recuérdame" está implementada — úsalo como referencia.
 
 ```
 [Rol]
@@ -240,44 +244,42 @@ Actúa como desarrollador PHP Senior especializado en seguridad de autenticació
 y manejo de sesiones/cookies.
 
 [Contexto]
-Proyecto: Encriptacion_PHP — PHP MVC custom (sin framework).
-Stack: PHP 8.2+, MySQLi, Bootstrap 5, SweetAlert2.
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: PHP 8.2+, MySQLi, Bootstrap 4, SweetAlert2.
 Módulo: auth (login).
 
 BD relevante:
 - users (id, first_name, last_name, email, username, password bcrypt, is_admin,
          remember_token VARCHAR(64) NULL, remember_token_expires DATETIME NULL)
 
-Módulo de referencia para patrones: password_resets (mismo patrón de token seguro).
-
 [Tarea]
 Implementar "Recuérdame" en el login.
 
 Criterios de aceptación:
 - Checkbox "Recuérdame" en el formulario de login
-- Si marcado: genera token con bin2hex(random_bytes(32)), guarda hash en users,
+- Si marcado: genera token con bin2hex(random_bytes(32)), guarda hash SHA-256 en users,
   emite cookie 'remember_me' (HttpOnly, Secure, SameSite=Strict, 30 días)
-- En cada request sin sesión activa: autoload.php valida cookie contra DB y restaura sesión
-- Logout: limpia remember_token/remember_token_expires en DB y elimina la cookie
-- Token se regenera en cada login con "Recuérdame" para evitar reutilización
+- En cada request sin sesión activa: app/Config/autoload.php valida cookie y restaura sesión
+- Logout: limpia remember_token en DB y elimina la cookie
+- Token se regenera en cada login con "Recuérdame"
 
 [Restricciones]
-- Token almacenado como hash (password_hash o hash('sha256')) — nunca el token en claro
+- Token almacenado como hash('sha256') — nunca el token en claro
 - Cookie con HttpOnly=true, Secure=true, SameSite=Strict
-- Validación del token en autoload.php antes del dispatch — no en cada Controller
-- Limpiar tokens expirados al validar (no tarea separada de cron)
-- Flash notifications para sesión restaurada: solo en casos de error, no en éxito silencioso
+- Validación en App\Core\Auth::restoreFromCookie() — llamado desde autoload.php
+- Limpiar cookie en AuthMiddleware::timeout() cuando la sesión expira
 
 [Formato de salida]
-1. SQL: ALTER TABLE para las dos columnas nuevas
-2. app/Config/autoload.php — lógica de validación de cookie
-3. app/Controller/auth/AuthController.php — cambios en login() y logout()
-4. views/auth/login.php — checkbox en el formulario
-5. app/Model/User.php — métodos nuevos
-6. Checklist de testing manual
+1. SQL: ALTER TABLE para las columnas nuevas
+2. app/Core/Auth.php — métodos de token
+3. app/Config/autoload.php — llamada a restoreFromCookie()
+4. app/Controller/AuthController.php — cambios en login() y logout()
+5. views/auth/login.php — checkbox en el formulario
+6. app/Model/User.php — métodos nuevos
+7. Checklist de testing manual
 ```
 
 ---
 
-_Última actualización: 2026-05-02 — v1.4.0_
+_Última actualización: 2026-05-10 — v1.5.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._
