@@ -6,6 +6,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.6.0] — 2026-05-10
+
+### Added
+
+- **Integration test suite** — PHPUnit ^11.0 against a real MySQL test database (`login_test`):
+  - `tests/Unit/UserTest.php` — 14 tests covering all `App\Model\User` public methods (CRUD, remember token, password hashing)
+  - `tests/Integration/AuthTest.php` — 14 tests covering `App\Core\Auth` (credential verification, remember-me token lifecycle, password reset token lifecycle)
+  - `tests/TestCase.php` — abstract base with direct `\mysqli` connection, schema bootstrap, per-test table truncation, and `createUser()` helper
+  - `tests/bootstrap.php` — minimal bootstrap: populates `$_ENV` from `.env.testing` before Composer autoload, never starts session
+- `phpunit.xml` — PHPUnit 11 config with `Unit` and `Integration` suites, `failOnWarning=true`, random execution order
+- `database/schema_test.sql` — table-only schema for test DB (no `CREATE DATABASE` / `USE` statements)
+- `.github/workflows/tests.yml` — GitHub Actions CI: MySQL 8.0 service with health check, `setup-php@v2`, Composer cache, PHPUnit run on push/PR to `master`
+- `composer.json` scripts: `test`, `test:unit`, `test:integration`
+
+### Fixed
+
+- `libs/Cache/FileCache::forget()` now respects the `$enabled` flag — previously attempted `unlink()` even when cache was disabled, causing permission errors in test environments
+- `app/Config/cache.php` — `appCache()` short-circuits immediately when `CACHE_ENABLED=false`, skipping directory writability checks that triggered warnings in CI
+- `app/Config/config.php` — changed `->load()` to `->safeLoad()` so the app boots without a `.env` file present (required for CI where `.env.testing` is injected at runtime)
+
+---
+
 ## [1.5.0] — 2026-05-10
 
 ### Added

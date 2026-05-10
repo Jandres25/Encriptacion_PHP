@@ -2,7 +2,8 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.5.0)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.6.0)
+[![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
@@ -21,6 +22,7 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - Admin user management — full CRUD with role-based access control (`AuthMiddleware`)
 - `App\Config\Database` singleton — single `\mysqli` connection per request
 - File-based cache for the users listing with automatic invalidation on writes
+- **Integration test suite** — 28 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
 - SweetAlert2 toast notifications for all CRUD and authentication actions
 - Per-page asset injection — `$pageStyles` / `$pageScripts` arrays in shared layouts
 - Shared layout system — `header.php` / `footer.php` accept `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`
@@ -121,6 +123,7 @@ mysql -u root -p < database/seeds.sql
 │       └── MailerService.php   # PHPMailer encapsulation — SMTP via STARTTLS
 ├── database/
 │   ├── schema.sql              # Table definitions (users + password_resets)
+│   ├── schema_test.sql         # Table-only schema for test DB (no CREATE DATABASE)
 │   └── seeds.sql               # Sample data with bcrypt-hashed passwords
 ├── libs/
 │   └── Cache/                  # File-based cache implementation
@@ -141,7 +144,15 @@ mysql -u root -p < database/seeds.sql
 │   ├── home/                   # index.php — dashboard content (wrapped by shared layout)
 │   ├── layouts/                # header.php, footer.php, messages.php
 │   └── user/                   # index, create, edit (wrapped by shared layout)
+├── tests/
+│   ├── bootstrap.php           # Test bootstrap — loads .env.testing, never starts session
+│   ├── TestCase.php            # Abstract base — DB connection, truncate, createUser()
+│   ├── Unit/
+│   │   └── UserTest.php        # 14 integration tests for App\Model\User
+│   └── Integration/
+│       └── AuthTest.php        # 14 integration tests for App\Core\Auth
 ├── .env.example                # Environment variable template
+├── phpunit.xml                 # PHPUnit 11 configuration
 └── composer.json               # Composer dependencies and PSR-4 autoload
 ```
 
@@ -187,6 +198,33 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 - Controls: `CACHE_ENABLED=true|false`, `CACHE_TTL_USERS=<seconds>`
 - Storage: `storage/cache/*.cache`
 - If the directory is not writable, cache is disabled for the request and a warning is logged (no HTTP 500)
+
+## Testing
+
+The project includes an integration test suite (PHPUnit 11) that runs against a real MySQL database.
+
+### Local setup
+
+```bash
+# 1. Create the test database
+mysql -u root -p -e "CREATE DATABASE login_test;"
+mysql -u root -p login_test < database/schema_test.sql
+
+# 2. Copy and configure the test environment
+cp .env.testing.example .env.testing   # or create it manually from .env.testing section in docs
+# Set DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE=login_test
+
+# 3. Run all tests
+composer test
+
+# Run by suite
+composer test:unit         # App\Model\User — 14 tests
+composer test:integration  # App\Core\Auth  — 14 tests
+```
+
+### CI
+
+Tests run automatically on every push and PR to `master` via GitHub Actions (`.github/workflows/tests.yml`).
 
 ## Contributing
 

@@ -281,5 +281,83 @@ Criterios de aceptación:
 
 ---
 
-_Última actualización: 2026-05-10 — v1.5.0_
+---
+
+## Plantilla 5 — Diseñar tests de integración PHPUnit
+
+Usar cuando: añadir tests a un módulo nuevo o ampliar la suite existente.
+
+```
+[Rol]
+Actúa como desarrollador PHP Senior especializado en testing de integración con PHPUnit,
+arquitectura MVC y seguridad web (autenticación, hashing, sesiones).
+
+[Contexto]
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: PHP 8.2+, MySQLi, PHPUnit ^11.0.
+DB de prueba: login_test (nunca login).
+
+Infraestructura de tests ya existente:
+- tests/bootstrap.php   — carga .env.testing antes del autoload, nunca session_start()
+- tests/TestCase.php    — conexión mysqli directa, truncate por test, createUser() helper
+- phpunit.xml           — suites Unit + Integration, failOnWarning=true, random order
+- database/schema_test.sql — schema sin CREATE DATABASE / USE
+
+Clases ya cubiertas: App\Model\User (tests/Unit/UserTest.php),
+                     App\Core\Auth (tests/Integration/AuthTest.php)
+
+[Tarea]
+Diseña los tests de integración para [Clase/módulo].
+
+Métodos a cubrir: [lista]
+
+[Restricciones]
+- NO mocks de mysqli — conexión real a login_test
+- NO cargar app/Config/autoload.php
+- Extender Tests\TestCase, no PHPUnit\Framework\TestCase directamente
+- PHPUnit 11: usar #[Test] y #[DataProvider] (atributos PHP 8, no anotaciones @)
+- Comparaciones de fechas contra MySQL: usar DATE_SUB(NOW(), INTERVAL X HOUR) — no timestamps PHP
+- Cada test independiente: no depender del orden de ejecución
+- Ubicar en tests/Unit/ si cubre una clase aislada, tests/Integration/ si orquesta varias
+
+[Formato de salida]
+1. Archivo tests/[Suite]/[Clase]Test.php completo
+2. Casos cubiertos (tabla: método → escenario → aserción clave)
+3. Edge cases que podrían fallar en producción
+```
+
+---
+
+## Ejemplo real — Tests de Auth + User (implementado en v1.6.0)
+
+> Prompt de infraestructura de tests bien estructurado — ver docs/plan-tests-integracion.md para el plan completo generado con Claude Opus.
+
+```
+[Rol]
+Actúa como desarrollador PHP Senior especializado en testing de integración con PHPUnit,
+arquitectura MVC y seguridad web.
+
+[Contexto]
+Proyecto: Encriptacion_PHP. PHPUnit ^11.0 en require-dev.
+Clases: app/Core/Auth.php + app/Model/User.php
+DB de prueba: login_test (MySQL real, no mocks).
+
+[Tarea]
+Diseña el plan COMPLETO de infraestructura de tests de integración:
+bootstrap, phpunit.xml, .env.testing, TestCase base, tests de User y Auth,
+y GitHub Actions workflow.
+
+[Restricciones]
+- NO mocks de mysqli, NO cargar autoload.php, NO usar Database singleton en tests
+- Bootstrap: parse_ini_file(.env.testing) → $_ENV antes del autoload de Composer
+- CACHE_ENABLED=false; salvaguarda si DB_DATABASE === 'login'
+- PHPUnit 11 con atributos #[Test]
+
+[Formato de salida]
+Plan en 4 fases con objetivo, archivos, decisiones técnicas y código completo.
+```
+
+---
+
+_Última actualización: 2026-05-10 — v1.6.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._

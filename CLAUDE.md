@@ -47,7 +47,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.5.0
+APP_VERSION=1.6.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -200,6 +200,52 @@ Loaded **only** on `views/user/index.php` via `$useDataTables = true` (CSS in he
 - SMTP uses STARTTLS encryption (port 587)
 - Remember-me tokens: `bin2hex(random_bytes(32))` stored raw in cookie; SHA-256 hash stored in DB. Cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS. TTL controlled by `REMEMBER_ME_TTL`. Cleared on logout and on session expiry
 - Session timeout: `AuthMiddleware::timeout()` called on every protected request; destroys session + clears remember cookie if `SESSION_TIMEOUT` seconds of inactivity exceeded
+
+## Testing
+
+### Stack
+
+- **PHPUnit ^11.0** — integration tests against a real MySQL database (`login_test`)
+- **28 tests total:** 14 in `tests/Unit/UserTest.php` (User model), 14 in `tests/Integration/AuthTest.php` (Auth class)
+- **CI:** `.github/workflows/tests.yml` — runs on push/PR to `master` with a MySQL 8.0 service
+
+### Running tests locally
+
+```bash
+# Prerequisites: create login_test DB and import schema
+mysql -u root -p -e "CREATE DATABASE login_test;"
+mysql -u root -p login_test < database/schema_test.sql
+
+# Create .env.testing with DB_DATABASE=login_test (never login)
+# Then run:
+composer test              # full suite
+composer test:unit         # User model only
+composer test:integration  # Auth class only
+```
+
+### Key conventions
+
+- **Never mock `\mysqli`** — all tests hit real MySQL
+- **Never load `app/Config/autoload.php`** in tests — it starts a session, reads cookies, and connects the DB singleton
+- `tests/bootstrap.php` populates `$_ENV` via `parse_ini_file('.env.testing')` before Composer autoload (so `config.php` picks up test vars when it runs as part of `autoload.files`)
+- `tests/TestCase.php` creates a direct `\mysqli` connection — does NOT use `App\Config\Database` singleton
+- Tables are truncated in `setUp()` per test; schema is applied once per process via a static flag
+- **Safeguard:** `TestCase` throws if `DB_DATABASE === 'login'` to prevent running against production DB
+- Timezone-sensitive date comparisons use `DATE_SUB(NOW(), INTERVAL X HOUR)` in SQL — never PHP-computed timestamps — to avoid PHP/MySQL timezone drift
+- `CACHE_ENABLED=false` in `.env.testing` and forced via `phpunit.xml` `<env>` — `appCache()` short-circuits before checking directory writability
+
+### Files
+
+| Path | Purpose |
+|---|---|
+| `phpunit.xml` | PHPUnit 11 config — suites, bootstrap, env overrides |
+| `.env.testing` | Test environment vars (gitignored) |
+| `database/schema_test.sql` | Table-only schema for `login_test` (no `CREATE DATABASE`) |
+| `tests/bootstrap.php` | Minimal bootstrap — `.env.testing` → `$_ENV`, then autoload |
+| `tests/TestCase.php` | Abstract base — connection, schema, truncate, `createUser()` |
+| `tests/Unit/UserTest.php` | 14 tests for `App\Model\User` |
+| `tests/Integration/AuthTest.php` | 14 tests for `App\Core\Auth` |
+| `.github/workflows/tests.yml` | GitHub Actions CI workflow |
 
 ## Notes
 
