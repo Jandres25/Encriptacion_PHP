@@ -3,7 +3,7 @@
 use Dotenv\Dotenv;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../..');
-$dotenv->load();
+$dotenv->safeLoad();
 $dotenv->required(['DB_HOST', 'DB_USERNAME', 'DB_DATABASE', 'APP_URL'])->notEmpty();
 
 function env(string $key, mixed $default = null): mixed

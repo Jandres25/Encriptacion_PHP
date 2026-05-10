@@ -1,4 +1,5 @@
 .env
+.env.testing
 storage/cache/*.cache
 !storage/cache/.gitignore
 

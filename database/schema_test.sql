@@ -1,0 +1,28 @@
+-- Schema de tablas para la base de datos de prueba (sin CREATE DATABASE / USE).
+-- Usado por tests/TestCase.php::applySchema().
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id`         int(11)      NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(100) NOT NULL,
+  `last_name`  varchar(100) NOT NULL,
+  `email`      varchar(100) NOT NULL DEFAULT '',
+  `username`   varchar(50)  NOT NULL,
+  `password`   varchar(255) NOT NULL,
+  `is_admin`               tinyint(1)   NOT NULL DEFAULT 0,
+  `remember_token`         varchar(64)           NULL DEFAULT NULL,
+  `remember_token_expires` datetime              NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email`          (`email`),
+  UNIQUE KEY `username`       (`username`),
+  KEY `idx_remember_token`    (`remember_token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `id`         int(11)      NOT NULL AUTO_INCREMENT,
+  `email`      varchar(255) NOT NULL,
+  `token`      varchar(255) NOT NULL,
+  `created_at` timestamp    NOT NULL DEFAULT current_timestamp(),
+  `expires_at` timestamp    NULL     DEFAULT NULL,
+  `used`       tinyint(1)            DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
