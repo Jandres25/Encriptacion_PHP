@@ -1,6 +1,6 @@
 <?php
 
-use App\Controller\Auth\AuthController;
+use App\Core\Auth;
 
 date_default_timezone_set(env('APP_TIMEZONE', 'America/La_Paz'));
 
@@ -11,4 +11,4 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-(new AuthController($connection))->restoreFromCookie();
+(new Auth($connection))->restoreFromCookie();

@@ -87,6 +87,30 @@ class Auth
         return $reset['email'];
     }
 
+    public function restoreFromCookie(): void
+    {
+        if (!empty($_SESSION['user_id'])) {
+            return;
+        }
+
+        $enabled = filter_var(env('REMEMBER_ME_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
+        if (!$enabled || empty($_COOKIE['remember_me'])) {
+            return;
+        }
+
+        $user = $this->consumeRememberToken($_COOKIE['remember_me']);
+
+        if (!$user) {
+            setcookie('remember_me', '', ['expires' => time() - 3600, 'path' => '/', 'httponly' => true, 'samesite' => 'Strict']);
+            return;
+        }
+
+        $_SESSION['user_id']       = $user['id'];
+        $_SESSION['name']          = $user['first_name'];
+        $_SESSION['is_admin']      = $user['is_admin'];
+        $_SESSION['last_activity'] = time();
+    }
+
     public function rememberTtl(): int
     {
         return (int) env('REMEMBER_ME_TTL', 2592000);

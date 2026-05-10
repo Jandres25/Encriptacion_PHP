@@ -2,21 +2,24 @@
 
 namespace App\Model;
 
-use mysqli;
+use App\Core\Model;
 
-class User
+class User extends Model
 {
     private const CACHE_KEY_ALL_USERS = 'users.all';
 
-    public function __construct(private mysqli $connection) {}
+    public function __construct(\mysqli $connection)
+    {
+        parent::__construct($connection);
+    }
 
     public function getAll(): array
     {
         $ttl = (int) env('CACHE_TTL_USERS', 60);
 
         return appCache()->remember(self::CACHE_KEY_ALL_USERS, $ttl, function (): array {
-            $result = $this->connection->query("SELECT * FROM users");
-            $users = [];
+            $result = $this->db->query("SELECT * FROM users");
+            $users  = [];
             while ($row = $result->fetch_assoc()) {
                 $users[] = $row;
             }
@@ -26,7 +29,7 @@ class User
 
     public function getById(int $id): ?array
     {
-        $stmt = $this->connection->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -36,7 +39,7 @@ class User
 
     public function getByUsername(string $username): ?array
     {
-        $stmt = $this->connection->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE username = ?");
         $stmt->bind_param("s", $username);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -46,7 +49,7 @@ class User
 
     public function getByEmail(string $email): ?array
     {
-        $stmt = $this->connection->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -57,7 +60,7 @@ class User
     public function create(array $data): bool
     {
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-        $stmt = $this->connection->prepare(
+        $stmt = $this->db->prepare(
             "INSERT INTO users (first_name, last_name, email, username, password, is_admin)
              VALUES (?, ?, ?, ?, ?, ?)"
         );
@@ -81,13 +84,11 @@ class User
 
     public function update(int $id, array $data): bool
     {
-        if (!empty($data['password'])) {
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-        } else {
-            $current = $this->getById($id);
-            $hashedPassword = $current['password'];
-        }
-        $stmt = $this->connection->prepare(
+        $hashedPassword = !empty($data['password'])
+            ? password_hash($data['password'], PASSWORD_DEFAULT)
+            : $this->getById($id)['password'];
+
+        $stmt = $this->db->prepare(
             "UPDATE users
              SET first_name=?, last_name=?, email=?, username=?, password=?, is_admin=?
              WHERE id=?"
@@ -113,7 +114,7 @@ class User
 
     public function delete(int $id): bool
     {
-        $stmt = $this->connection->prepare("DELETE FROM users WHERE id = ?");
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $success = $stmt->affected_rows > 0;
@@ -126,7 +127,7 @@ class User
 
     public function setRememberToken(int $userId, string $tokenHash, string $expiresAt): bool
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->db->prepare(
             "UPDATE users SET remember_token = ?, remember_token_expires = ? WHERE id = ?"
         );
         $stmt->bind_param("ssi", $tokenHash, $expiresAt, $userId);
@@ -138,7 +139,7 @@ class User
 
     public function getByRememberToken(string $tokenHash): ?array
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->db->prepare(
             "SELECT * FROM users WHERE remember_token = ? AND remember_token_expires > NOW() LIMIT 1"
         );
         $stmt->bind_param("s", $tokenHash);
@@ -150,7 +151,7 @@ class User
 
     public function clearRememberToken(int $userId): bool
     {
-        $stmt = $this->connection->prepare(
+        $stmt = $this->db->prepare(
             "UPDATE users SET remember_token = NULL, remember_token_expires = NULL WHERE id = ?"
         );
         $stmt->bind_param("i", $userId);
@@ -163,7 +164,7 @@ class User
     public function updatePassword(string $email, string $newPassword): bool
     {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        $stmt = $this->connection->prepare("UPDATE users SET password = ? WHERE email = ?");
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE email = ?");
         $stmt->bind_param("ss", $hashedPassword, $email);
         $stmt->execute();
         $success = $stmt->affected_rows > 0;

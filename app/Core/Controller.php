@@ -13,9 +13,18 @@ abstract class Controller
         exit;
     }
 
-    protected function render(string $view, array $data = []): void
+    protected function render(string $view, array $data = [], bool $protected = false): void
     {
+        $data['year'] ??= date('Y');
         extract($data, EXTR_SKIP);
-        require __DIR__ . '/../../views/' . ltrim($view, '/');
+        $viewsPath = __DIR__ . '/../../views/';
+
+        if ($protected) {
+            require $viewsPath . 'layouts/header.php';
+            require $viewsPath . ltrim($view, '/');
+            require $viewsPath . 'layouts/footer.php';
+        } else {
+            require $viewsPath . ltrim($view, '/');
+        }
     }
 }
