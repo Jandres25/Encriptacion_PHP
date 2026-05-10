@@ -54,6 +54,7 @@
                         <input type="password" class="form-control" name="password" id="password"
                             placeholder="Password" required>
                     </div>
+                    <small class="form-text text-muted">Required. At least 8 characters.</small>
                 </div>
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" name="is_admin" id="is_admin" value="1">

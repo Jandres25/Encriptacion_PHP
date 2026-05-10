@@ -27,7 +27,10 @@ class UserController extends Controller
         $this->guard();
 
         $this->render('user/index.php', [
-            'users' => $this->userModel->getAll(),
+            'pageTitle'     => 'Users — SecureAuth',
+            'useDataTables' => true,
+            'pageScripts'   => ['js/users-table.js', 'js/users-delete.js'],
+            'users'         => $this->userModel->getAll(),
         ], protected: true);
     }
 
@@ -64,7 +67,9 @@ class UserController extends Controller
             $this->redirect('/users/create');
         }
 
-        $this->render('user/create.php', [], protected: true);
+        $this->render('user/create.php', [
+            'pageTitle' => 'Create User — SecureAuth',
+        ], protected: true);
     }
 
     public function edit(): void
@@ -110,7 +115,10 @@ class UserController extends Controller
             $this->redirect('/users');
         }
 
-        $this->render('user/edit.php', ['user' => $user], protected: true);
+        $this->render('user/edit.php', [
+            'pageTitle' => 'Edit User — SecureAuth',
+            'user'      => $user,
+        ], protected: true);
     }
 
     public function delete(): void

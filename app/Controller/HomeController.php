@@ -13,8 +13,11 @@ class HomeController extends Controller
         AuthMiddleware::auth();
 
         $this->render('home/index.php', [
-            'name'    => $_SESSION['name'],
-            'isAdmin' => $_SESSION['is_admin'],
-        ]);
+            'pageTitle' => 'Dashboard — SecureAuth',
+            'favicon'   => 'boton-de-inicio.png',
+            'bodyClass' => 'dashboard',
+            'name'      => $_SESSION['name'],
+            'isAdmin'   => $_SESSION['is_admin'],
+        ], protected: true);
     }
 }
