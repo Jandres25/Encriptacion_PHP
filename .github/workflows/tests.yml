@@ -71,4 +71,16 @@ jobs:
           EOF
 
       - name: Run PHPUnit
+        env:
+          DB_HOST: 127.0.0.1
+          DB_USERNAME: root
+          DB_PASSWORD: ""
+          DB_DATABASE: login_test
+          APP_URL: http://localhost/Encriptacion_PHP/public
+          APP_TIMEZONE: UTC
+          APP_VERSION: ci
+          CACHE_ENABLED: "false"
+          REMEMBER_ME_ENABLED: "true"
+          REMEMBER_ME_TTL: "2592000"
+          SESSION_TIMEOUT: "1800"
         run: vendor/bin/phpunit --colors=always
