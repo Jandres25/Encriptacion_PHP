@@ -1,0 +1,74 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: login_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, mysqli, openssl
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Import schema into test DB
+        run: mysql -h 127.0.0.1 -u root login_test < database/schema_test.sql
+
+      - name: Create .env.testing
+        run: |
+          cat > .env.testing << 'EOF'
+          DB_HOST=127.0.0.1
+          DB_USERNAME=root
+          DB_PASSWORD=
+          DB_DATABASE=login_test
+          SMTP_HOST=smtp.example.com
+          SMTP_USERNAME=test@example.com
+          SMTP_PASSWORD=secret
+          SMTP_PORT=587
+          APP_URL=http://localhost/Encriptacion_PHP/public
+          APP_TIMEZONE=UTC
+          APP_VERSION=ci
+          CACHE_ENABLED=false
+          CACHE_TTL_USERS=1
+          REMEMBER_ME_ENABLED=true
+          REMEMBER_ME_TTL=2592000
+          SESSION_TIMEOUT=1800
+          EOF
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --colors=always

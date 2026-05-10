@@ -10,5 +10,8 @@ vendor/
 node_modules/
 public/storage/
 
+# PHPUnit
+.phpunit.cache/
+
 # Claude
 .claude
