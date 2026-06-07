@@ -21,6 +21,7 @@
         <img class="wave" src="<?= APP_URL ?>/img/wave.png">
         <div class="login-content">
             <form method="post" action="<?= APP_URL ?>/login">
+                <input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">
                 <img src="<?= APP_URL ?>/img/avatar.svg">
                 <h2 class="title">WELCOME</h2>
                 <div class="input-div one">

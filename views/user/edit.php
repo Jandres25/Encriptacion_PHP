@@ -3,6 +3,7 @@
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">User Details</div>
         <form action="<?= APP_URL ?>/users/edit" method="post">
+            <input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">
             <div class="card-body">
                 <input type="hidden" name="id" value="<?= $user['id'] ?>">
                 <div class="mb-3">

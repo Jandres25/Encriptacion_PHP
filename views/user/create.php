@@ -3,6 +3,7 @@
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white">User Details</div>
         <form action="<?= APP_URL ?>/users/create" method="post">
+            <input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">
             <div class="card-body">
                 <div class="mb-3">
                     <label for="first_name" class="form-label">First Name</label>

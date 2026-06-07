@@ -47,7 +47,8 @@
                                     <button
                                         type="button"
                                         class="btn btn-sm btn-outline-danger js-delete-user"
-                                        data-delete-url="<?= APP_URL ?>/users/delete?id=<?= $user['id'] ?>"
+                                        data-id="<?= $user['id'] ?>"
+                                        data-csrf="<?= \App\Core\Csrf::token() ?>"
                                         data-name="<?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name'], ENT_QUOTES, 'UTF-8') ?>"
                                         data-username="<?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?>">
                                         <i class="fas fa-user-minus"></i>

@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Core\Auth;
 use App\Core\Controller;
-use App\Middleware\AuthMiddleware;
 use App\Service\MailerService;
 
 class AuthController extends Controller
@@ -44,10 +43,13 @@ class AuthController extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btningresar'])) {
+            $this->verifyCsrf('/login');
+
             if (!empty($_POST['usuario']) && !empty($_POST['password'])) {
                 $user = $this->auth->verifyCredentials($_POST['usuario'], $_POST['password']);
 
                 if ($user) {
+                    session_regenerate_id(true);
                     $_SESSION['user_id']       = $user['id'];
                     $_SESSION['name']          = $user['first_name'];
                     $_SESSION['is_admin']      = $user['is_admin'];
@@ -95,6 +97,7 @@ class AuthController extends Controller
     public function forgotPassword(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnrecuperar'])) {
+            $this->verifyCsrf('/forgot-password');
             $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
             $token = $this->auth->createPasswordResetToken($email);
 
@@ -123,6 +126,7 @@ class AuthController extends Controller
     public function resetPassword(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnactualizar'])) {
+            $this->verifyCsrf('/reset-password?token=' . urlencode($_POST['token'] ?? ''));
             $token           = $_POST['token'];
             $newPassword     = $_POST['new_password'];
             $confirmPassword = $_POST['confirm_password'];

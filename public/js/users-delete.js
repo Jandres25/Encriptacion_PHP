@@ -4,11 +4,12 @@ document.addEventListener('click', function (event) {
         return;
     }
 
-    const deleteUrl = deleteButton.getAttribute('data-delete-url');
+    const id = deleteButton.getAttribute('data-id');
+    const csrf = deleteButton.getAttribute('data-csrf');
     const name = deleteButton.getAttribute('data-name') || '';
     const username = deleteButton.getAttribute('data-username') || '';
 
-    if (!deleteUrl) {
+    if (!id) {
         return;
     }
 
@@ -22,8 +23,27 @@ document.addEventListener('click', function (event) {
         confirmButtonText: 'Yes, delete',
         cancelButtonText: 'Cancel'
     }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = deleteUrl;
+        if (!result.isConfirmed) {
+            return;
         }
+
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = `${APP_URL}/users/delete`;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_csrf';
+        csrfInput.value = csrf;
+
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = id;
+
+        form.appendChild(csrfInput);
+        form.appendChild(idInput);
+        document.body.appendChild(form);
+        form.submit();
     });
 });

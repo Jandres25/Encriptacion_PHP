@@ -21,4 +21,4 @@ $router->get('/users/create',     [UserController::class,  'create']);
 $router->post('/users/create',    [UserController::class,  'create']);
 $router->get('/users/edit',       [UserController::class,  'edit']);
 $router->post('/users/edit',      [UserController::class,  'edit']);
-$router->get('/users/delete',     [UserController::class,  'delete']);
+$router->post('/users/delete',    [UserController::class,  'delete']);

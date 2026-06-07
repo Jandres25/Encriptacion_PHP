@@ -48,13 +48,14 @@ class Auth
             return null;
         }
 
-        $token   = bin2hex(random_bytes(32));
-        $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        $token     = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $expires   = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
         $stmt = $this->connection->prepare(
             "INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)"
         );
-        $stmt->bind_param("sss", $email, $token, $expires);
+        $stmt->bind_param("sss", $email, $tokenHash, $expires);
         $stmt->execute();
         $stmt->close();
 
@@ -63,12 +64,13 @@ class Auth
 
     public function consumeResetToken(string $token, string $newPassword): ?string
     {
-        $stmt = $this->connection->prepare(
+        $tokenHash = hash('sha256', $token);
+        $stmt      = $this->connection->prepare(
             "SELECT email FROM password_resets
              WHERE token = ? AND expires_at > NOW() AND used = 0
              ORDER BY created_at DESC LIMIT 1"
         );
-        $stmt->bind_param("s", $token);
+        $stmt->bind_param("s", $tokenHash);
         $stmt->execute();
         $reset = $stmt->get_result()->fetch_assoc();
         $stmt->close();
@@ -80,7 +82,7 @@ class Auth
         $this->userModel->updatePassword($reset['email'], $newPassword);
 
         $stmt = $this->connection->prepare("UPDATE password_resets SET used = 1 WHERE token = ?");
-        $stmt->bind_param("s", $token);
+        $stmt->bind_param("s", $tokenHash);
         $stmt->execute();
         $stmt->close();
 

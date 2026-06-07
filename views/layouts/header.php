@@ -10,7 +10,7 @@
     <link rel="preload" href="<?= APP_URL ?>/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="<?= APP_URL ?>/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="<?= APP_URL ?>/css/all.min.css">
-    <link href="<?= APP_URL ?>/img/<?= $favicon ?? 'usuario.png' ?>" rel="shortcut icon">
+    <link href="<?= APP_URL ?>/img/<?= htmlspecialchars($favicon ?? 'usuario.png') ?>" rel="shortcut icon">
     <?php if ($useDataTables ?? false): ?>
         <link href="<?= APP_URL ?>/DataTables/dataTables.bootstrap4.min.css" rel="stylesheet">
         <link href="<?= APP_URL ?>/DataTables/responsive.bootstrap4.min.css" rel="stylesheet">
@@ -22,6 +22,10 @@
     <link rel="stylesheet" href="<?= APP_URL ?>/css/sweetalert2.min.css">
     <script src="<?= APP_URL ?>/js/sweetalert2.all.min.js"></script>
     <script src="<?= APP_URL ?>/js/jquery.min.js"></script>
+
+    <script>
+        const APP_URL = '<?= APP_URL ?>';
+    </script>
 </head>
 
 <body<?= isset($bodyClass) ? ' class="' . htmlspecialchars($bodyClass) . '"' : '' ?>>

@@ -39,6 +39,7 @@ class UserController extends Controller
         $this->guard();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
+            $this->verifyCsrf('/users/create');
             $data = [
                 'first_name' => $_POST['first_name'],
                 'last_name'  => $_POST['last_name'],
@@ -77,6 +78,7 @@ class UserController extends Controller
         $this->guard();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
+            $this->verifyCsrf('/users/edit?id=' . (int) ($_POST['id'] ?? 0));
             $id   = (int) $_POST['id'];
             $data = [
                 'first_name' => $_POST['first_name'],
@@ -125,13 +127,13 @@ class UserController extends Controller
     {
         $this->guard();
 
-        if (isset($_GET['id'])) {
-            $id      = (int) $_GET['id'];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
+            $this->verifyCsrf('/users');
+            $id      = (int) $_POST['id'];
             $deleted = $this->userModel->delete($id);
 
             $_SESSION['message'] = $deleted ? 'User deleted successfully' : 'Failed to delete user';
             $_SESSION['icon']    = $deleted ? 'success' : 'error';
-            $this->redirect('/users');
         }
 
         $this->redirect('/users');

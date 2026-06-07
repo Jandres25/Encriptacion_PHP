@@ -22,6 +22,7 @@
         <img class="wave" src="<?= APP_URL ?>/img/wave.png">
         <div class="login-content">
             <form method="post" action="<?= APP_URL ?>/forgot-password">
+                <input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">
                 <img src="<?= APP_URL ?>/img/avatar.svg">
                 <h2 class="title">Forgot Password</h2>
                 <div class="input-div one">

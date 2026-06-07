@@ -22,6 +22,7 @@
         <img class="wave" src="<?= APP_URL ?>/img/wave.png">
         <div class="login-content">
             <form method="post" action="<?= APP_URL ?>/reset-password">
+                <input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">
                 <img src="<?= APP_URL ?>/img/avatar.svg">
                 <h2 class="title">New Password</h2>
                 <input type="hidden" name="token" value="<?= htmlspecialchars($_GET['token'] ?? '') ?>">

@@ -6,6 +6,15 @@ abstract class Controller
 {
     public function __construct(protected \mysqli $connection) {}
 
+    protected function verifyCsrf(string $redirectPath): void
+    {
+        if (!Csrf::verify()) {
+            $_SESSION['message'] = 'Invalid request. Please try again.';
+            $_SESSION['icon']    = 'error';
+            $this->redirect($redirectPath);
+        }
+    }
+
     protected function redirect(string $path): void
     {
         $url = str_starts_with($path, 'http') ? $path : APP_URL . '/' . ltrim($path, '/');
