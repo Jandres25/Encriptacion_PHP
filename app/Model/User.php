@@ -84,9 +84,14 @@ class User extends Model
 
     public function update(int $id, array $data): bool
     {
+        $existing = $this->getById($id);
+        if (!$existing) {
+            return false;
+        }
+
         $hashedPassword = !empty($data['password'])
             ? password_hash($data['password'], PASSWORD_DEFAULT)
-            : $this->getById($id)['password'];
+            : $existing['password'];
 
         $stmt = $this->db->prepare(
             "UPDATE users
@@ -104,7 +109,7 @@ class User extends Model
             $id
         );
         $stmt->execute();
-        $success = $stmt->affected_rows >= 0;
+        $success = $stmt->affected_rows !== -1;
         $stmt->close();
         if ($success) {
             appCache()->forget(self::CACHE_KEY_ALL_USERS);

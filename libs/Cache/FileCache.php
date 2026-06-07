@@ -81,9 +81,11 @@ class FileCache
 
     public function remember(string $key, int $ttlSeconds, callable $resolver): mixed
     {
-        $cached = $this->get($key);
-        if ($cached !== null) {
-            return $cached;
+        if ($this->enabled && is_file($this->filePath($key))) {
+            $cached = $this->get($key);
+            if ($cached !== null) {
+                return $cached;
+            }
         }
 
         $value = $resolver();
