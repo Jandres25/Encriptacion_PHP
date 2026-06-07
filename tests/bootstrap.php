@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 // Poblar $_ENV/$_SERVER con .env.testing ANTES de que Composer ejecute config.php

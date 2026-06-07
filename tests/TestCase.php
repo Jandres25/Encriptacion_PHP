@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tests;
@@ -43,7 +44,7 @@ abstract class TestCase extends BaseTestCase
         if ($name === 'login') {
             throw new \RuntimeException(
                 'Refuso ejecutar tests contra la DB de producción "login". ' .
-                'Configura DB_DATABASE=login_test en .env.testing'
+                    'Configura DB_DATABASE=login_test en .env.testing'
             );
         }
 
@@ -100,8 +101,12 @@ abstract class TestCase extends BaseTestCase
         );
         $stmt->bind_param(
             'sssssi',
-            $data['first_name'], $data['last_name'], $data['email'],
-            $data['username'], $hash, $data['is_admin']
+            $data['first_name'],
+            $data['last_name'],
+            $data['email'],
+            $data['username'],
+            $hash,
+            $data['is_admin']
         );
         $stmt->execute();
         $data['id']            = $stmt->insert_id;

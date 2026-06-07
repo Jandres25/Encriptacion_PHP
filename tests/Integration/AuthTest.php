@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Tests\Integration;
@@ -105,9 +106,10 @@ final class AuthTest extends TestCase
         $token = $this->auth->createPasswordResetToken('reset@example.com');
 
         $this->assertNotEmpty($token);
+        $tokenHash = hash('sha256', $token);
         $row = self::$db->query("SELECT * FROM password_resets WHERE email='reset@example.com'")->fetch_assoc();
         $this->assertNotNull($row);
-        $this->assertSame($token, $row['token']);
+        $this->assertSame($tokenHash, $row['token']);
         $this->assertSame(0, (int) $row['used']);
         $this->assertGreaterThan(time(), strtotime($row['expires_at']));
     }
@@ -132,7 +134,8 @@ final class AuthTest extends TestCase
         $row = self::$db->query("SELECT password FROM users WHERE id={$u['id']}")->fetch_assoc();
         $this->assertTrue(password_verify('newpass', $row['password']));
 
-        $reset = self::$db->query("SELECT used FROM password_resets WHERE token='{$token}'")->fetch_assoc();
+        $tokenHash = hash('sha256', $token);
+        $reset = self::$db->query("SELECT used FROM password_resets WHERE token='{$tokenHash}'")->fetch_assoc();
         $this->assertSame(1, (int) $reset['used']);
     }
 
@@ -140,8 +143,9 @@ final class AuthTest extends TestCase
     public function it_rejects_expired_reset_token(): void
     {
         $this->createUser(['email' => 'reset@example.com']);
-        $token = $this->auth->createPasswordResetToken('reset@example.com');
-        self::$db->query("UPDATE password_resets SET expires_at = DATE_SUB(NOW(), INTERVAL 2 HOUR) WHERE token='{$token}'");
+        $token     = $this->auth->createPasswordResetToken('reset@example.com');
+        $tokenHash = hash('sha256', $token);
+        self::$db->query("UPDATE password_resets SET expires_at = DATE_SUB(NOW(), INTERVAL 2 HOUR) WHERE token='{$tokenHash}'");
         $this->assertNull($this->auth->consumeResetToken($token, 'whatever'));
     }
 
