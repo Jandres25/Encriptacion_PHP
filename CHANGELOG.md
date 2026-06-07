@@ -6,6 +6,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.6.1] — 2026-06-07
+
+### Security
+
+- **CSRF protection** — nueva clase `App\Core\Csrf` con métodos estáticos `token()` / `verify()`; todos los formularios POST incluyen un campo oculto `_csrf` validado en cada controlador via el nuevo helper `Controller::verifyCsrf()`; el token se almacena en `$_SESSION['csrf_token']` y se compara con `hash_equals()` para evitar timing attacks
+- **XSS en mensajes flash** — `$icon` y `$message` en `views/layouts/messages.php` se interpolaban directamente en un string JavaScript; reemplazados con `json_encode()` para que comillas, barras o saltos de línea no puedan romper el contexto JS
+- **Delete de usuario cambiado de GET a POST** — la ruta `/users/delete` y `UserController::delete()` ahora requieren POST; `users-delete.js` crea y envía un form dinámicamente con el token CSRF al confirmar, en lugar de hacer `window.location.href`; elimina explotación CSRF con `<img>` o un solo clic
+- **Session fixation en login** — `session_regenerate_id(true)` se llama inmediatamente después de `password_verify()` exitoso, antes de escribir variables de sesión
+- **Tokens de reset de contraseña hasheados en DB** — `Auth::createPasswordResetToken()` ahora almacena `hash('sha256', $token)` en la tabla `password_resets` (mismo patrón que los tokens de remember-me); `Auth::consumeResetToken()` hashea el token entrante antes de la búsqueda en DB; el token raw solo viaja en la URL del email
+
+### Fixed
+
+- **Null dereference en `User::update()`** — cuando `getById($id)` retornaba `null`, acceder a `['password']` en el resultado causaba un fatal TypeError en PHP 8.x; `update()` ahora llama `getById()` una vez, retorna `false` temprano si el usuario no existe, y reutiliza el resultado para el fallback de contraseña
+- **`User::update()` éxito falso** — `affected_rows >= 0` trataba un UPDATE sin filas coincidentes (ID no encontrado) como éxito; cambiado a `affected_rows !== -1` para distinguir correctamente un error de DB (`-1`) de una actualización idempotente (`0` filas cambiadas)
+- **`FileCache::remember()` no cacheaba null** — `get()` retorna `null` tanto para un cache miss como para una entrada expirada/corrupta; `remember()` ahora verifica `is_file()` primero para distinguir un miss real de un valor null cacheado
+- **`$favicon` sin escapar en header** — `views/layouts/header.php` ahora pasa `$favicon` por `htmlspecialchars()`, consistente con `$pageTitle` y `$bodyClass`
+
+---
+
 ## [1.6.0] — 2026-05-10
 
 ### Added

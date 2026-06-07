@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.6.0)
+[![Version](https://img.shields.io/badge/version-1.6.1-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.6.1)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -16,9 +16,11 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 
 - Custom MVC architecture — `App\Core\Router`, abstract `Controller` and `Model`, PSR-4 autoloading via Composer
 - Secure login with bcrypt password hashing (`password_hash()` / `password_verify()`)
+- **CSRF protection** on all POST forms via `App\Core\Csrf` — `hash_equals()` token comparison
+- **Session fixation prevention** — `session_regenerate_id(true)` on every successful login
 - Persistent login via **Remember Me** — `HttpOnly` / `SameSite=Strict` cookie; token stored as SHA-256 hash in DB
 - Automatic **session timeout** on inactivity with remember cookie cleanup
-- Password recovery via email with expiring single-use tokens (PHPMailer + STARTTLS)
+- Password recovery via email with expiring single-use tokens stored as SHA-256 hash (PHPMailer + STARTTLS)
 - Admin user management — full CRUD with role-based access control (`AuthMiddleware`)
 - `App\Config\Database` singleton — single `\mysqli` connection per request
 - File-based cache for the users listing with automatic invalidation on writes
@@ -112,7 +114,8 @@ mysql -u root -p < database/seeds.sql
 │   │   └── UserController.php  # Full user CRUD — guarded by admin middleware
 │   ├── Core/
 │   │   ├── Auth.php            # Credential verify, remember-me tokens, password reset tokens
-│   │   ├── Controller.php      # Abstract base — render() and redirect()
+│   │   ├── Controller.php      # Abstract base — render(), redirect(), verifyCsrf()
+│   │   ├── Csrf.php            # CSRF token generation and verification
 │   │   ├── Model.php           # Abstract base — holds protected \mysqli $db
 │   │   └── Router.php          # GET/POST route registration and dispatch
 │   ├── Middleware/
@@ -177,18 +180,20 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 | `/users`                    | `UserController::index()`          |
 | `/users/create`             | `UserController::create()`         |
 | `/users/edit?id=X`          | `UserController::edit()`           |
-| `/users/delete?id=X`        | `UserController::delete()`         |
+| `POST /users/delete`        | `UserController::delete()`         |
 
 ## Security
 
 - Passwords hashed with bcrypt (`PASSWORD_DEFAULT`)
-- Session set only after successful `password_verify()`
-- Reset tokens: 256-bit (`bin2hex(random_bytes(32))`), 1-hour expiry, single-use
+- Session set only after successful `password_verify()`; `session_regenerate_id(true)` called immediately after to prevent session fixation
+- **CSRF tokens** on all POST forms — generated via `App\Core\Csrf::token()`, validated with `hash_equals()` in every controller
+- Reset tokens: 256-bit (`bin2hex(random_bytes(32))`), 1-hour expiry, single-use, stored as SHA-256 hash in DB
 - All DB queries via MySQLi prepared statements
 - Email validated with `filter_var()` before DB lookup
 - SMTP with STARTTLS (port 587)
 - Remember-me: raw token in cookie, SHA-256 hash in DB — cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS
 - Session timeout enforced on every protected request; clears remember cookie to prevent silent re-login
+- User delete requires POST — not exploitable via `<img>` or link prefetch
 
 ## Cache
 
