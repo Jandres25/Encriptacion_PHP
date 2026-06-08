@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.6.1-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.6.1)
+[![Version](https://img.shields.io/badge/version-1.7.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.7.0)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -24,7 +24,8 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - Admin user management — full CRUD with role-based access control (`AuthMiddleware`)
 - `App\Config\Database` singleton — single `\mysqli` connection per request
 - File-based cache for the users listing with automatic invalidation on writes
-- **Integration test suite** — 28 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
+- **Account lockout** — automatic account lock after N failed login attempts; configurable threshold and duration via `.env`
+- **Integration test suite** — 40 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
 - SweetAlert2 toast notifications for all CRUD and authentication actions
 - Per-page asset injection — `$pageStyles` / `$pageScripts` arrays in shared layouts
 - Shared layout system — `header.php` / `footer.php` accept `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`
@@ -74,7 +75,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.5.0
+APP_VERSION=1.7.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -83,6 +84,10 @@ REMEMBER_ME_ENABLED=true
 REMEMBER_ME_TTL=2592000
 
 SESSION_TIMEOUT=1800
+
+LOGIN_LOCKOUT_ENABLED=true
+LOGIN_MAX_ATTEMPTS=5
+LOGIN_LOCKOUT_MINUTES=15
 ```
 
 4. Import the database schema:
@@ -121,11 +126,12 @@ mysql -u root -p < database/seeds.sql
 │   ├── Middleware/
 │   │   └── AuthMiddleware.php  # Static guards: auth(), admin(), timeout()
 │   ├── Model/
+│   │   ├── LoginAttempt.php    # Account lockout — atomic insert/update, lock check, clear
 │   │   └── User.php            # All DB queries via MySQLi prepared statements
 │   └── Service/
 │       └── MailerService.php   # PHPMailer encapsulation — SMTP via STARTTLS
 ├── database/
-│   ├── schema.sql              # Table definitions (users + password_resets)
+│   ├── schema.sql              # Table definitions (users, password_resets, login_attempts)
 │   ├── schema_test.sql         # Table-only schema for test DB (no CREATE DATABASE)
 │   └── seeds.sql               # Sample data with bcrypt-hashed passwords
 ├── libs/
@@ -194,6 +200,7 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 - Remember-me: raw token in cookie, SHA-256 hash in DB — cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS
 - Session timeout enforced on every protected request; clears remember cookie to prevent silent re-login
 - User delete requires POST — not exploitable via `<img>` or link prefetch
+- **Account lockout** — 5 consecutive failed logins lock the account for 15 min (configurable); only tracked for existing usernames; lockout cleared on successful login or password reset
 
 ## Cache
 
@@ -223,8 +230,8 @@ cp .env.testing.example .env.testing   # or create it manually from .env.testing
 composer test
 
 # Run by suite
-composer test:unit         # App\Model\User — 14 tests
-composer test:integration  # App\Core\Auth  — 14 tests
+composer test:unit         # App\Model\User + App\Model\LoginAttempt — 21 tests
+composer test:integration  # App\Core\Auth — 19 tests
 ```
 
 ### CI

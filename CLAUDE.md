@@ -47,7 +47,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.6.1
+APP_VERSION=1.7.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -56,6 +56,10 @@ REMEMBER_ME_ENABLED=true
 REMEMBER_ME_TTL=2592000
 
 SESSION_TIMEOUT=1800
+
+LOGIN_LOCKOUT_ENABLED=true
+LOGIN_MAX_ATTEMPTS=5
+LOGIN_LOCKOUT_MINUTES=15
 ```
 
 The `.env` file is loaded by `vlucas/phpdotenv` in `app/Config/config.php`, which also defines the `APP_URL` constant and the `env()` helper.
@@ -64,6 +68,9 @@ The `.env` file is loaded by `vlucas/phpdotenv` in `app/Config/config.php`, whic
 - `REMEMBER_ME_ENABLED` — enable/disable persistent login via cookie (default `true`)
 - `REMEMBER_ME_TTL` — cookie + token lifetime in seconds (default `2592000` = 30 days)
 - `SESSION_TIMEOUT` — inactivity expiry in seconds (default `1800` = 30 min)
+- `LOGIN_LOCKOUT_ENABLED` — enable/disable account lockout (default `true`)
+- `LOGIN_MAX_ATTEMPTS` — failed attempts before lock (default `5`)
+- `LOGIN_LOCKOUT_MINUTES` — lock duration in minutes (default `15`)
 
 ## Architecture
 
@@ -92,38 +99,39 @@ Browser → public/index.php → App\Core\Router → Controller::method()
 
 ### Key Files
 
-| Path                                | Purpose                                                                                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/index.php`                  | Front controller — bootstraps autoload, router, and dispatches requests                                                                           |
-| `public/.htaccess`                  | Apache rewrite rules: non-file/non-directory requests route to `public/index.php`                                                                 |
-| `routes/web.php`                    | All route definitions — GET/POST mapped to controller methods                                                                                     |
-| `app/Config/config.php`             | Loads `.env` via phpdotenv; defines `APP_URL` constant and `env()` helper                                                                         |
-| `app/Config/database.php`           | `App\Config\Database` singleton — `Database::getConnection()` returns the shared `\mysqli` instance                                               |
-| `app/Config/cache.php`              | Cache bootstrap; exposes `appCache()` with graceful fallback when cache dir is not writable                                                       |
-| `app/Config/autoload.php`           | Bootstrap entry point: sets timezone, loads cache + database, starts session, calls `Auth::restoreFromCookie()`                                   |
-| `app/Core/Router.php`               | `App\Core\Router` — registers GET/POST routes, strips APP_URL base path, dispatches to controller                                                 |
-| `app/Core/Controller.php`           | Abstract base — `render(string $view, array $data, bool $protected)` and `redirect(string $path)`                                                 |
-| `app/Core/Model.php`                | Abstract base — holds `protected \mysqli $db`                                                                                                     |
-| `app/Core/Auth.php`                 | `App\Core\Auth` — credential verify, remember-me token issue/consume/clear, password reset tokens (stored as SHA-256 hash), `restoreFromCookie()` |
-| `app/Core/Csrf.php`                 | `App\Core\Csrf` — `token()` generates/returns session CSRF token; `verify()` validates `$_POST['_csrf']` with `hash_equals()`                     |
-| `app/Middleware/AuthMiddleware.php` | Static guards: `auth()`, `admin()`, `timeout(\mysqli)`                                                                                            |
-| `app/Controller/AuthController.php` | All auth logic: login, logout, forgotPassword, resetPassword                                                                                      |
-| `app/Controller/HomeController.php` | Dashboard: applies timeout + auth middleware, renders home view                                                                                   |
-| `app/Controller/UserController.php` | Full user CRUD — guarded by `admin()` middleware                                                                                                  |
-| `app/Model/User.php`                | `App\Model\User` — all DB queries via MySQLi prepared statements                                                                                  |
-| `app/Service/MailerService.php`     | PHPMailer encapsulation — SMTP via STARTTLS                                                                                                       |
-| `views/layouts/header.php`          | Shared `<head>` + nav for all protected pages; accepts `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`, `$pageStyles`                    |
-| `views/layouts/footer.php`          | Shared footer with version; accepts `$useDataTables`, `$pageScripts`                                                                              |
-| `views/layouts/messages.php`        | Centralized SweetAlert2 toast notification logic                                                                                                  |
-| `views/home/index.php`              | Dashboard content only (hero + feature cards) — wrapped by shared layout via `protected: true`                                                    |
-| `views/auth/`                       | Standalone auth views (login, forgot-password, reset-password) — include their own `<head>`                                                       |
-| `views/user/`                       | Protected user CRUD views — wrapped by shared layout                                                                                              |
-| `public/css/estilo.css`             | Global styles + CSS palette variables (`--color-dark`, `--color-accent`)                                                                          |
-| `public/css/layout-protected.css`   | Full-height flex layout for protected pages                                                                                                       |
-| `public/js/users-table.js`          | DataTables initialization — loaded only in `UserController::index()` via `pageScripts`                                                            |
-| `public/js/users-delete.js`         | SweetAlert2 delete confirmation — loaded only in `UserController::index()` via `pageScripts`                                                      |
-| `database/schema.sql`               | Current DB schema — `users` + `password_resets` tables                                                                                            |
-| `database/seeds.sql`                | Sample users with bcrypt-hashed passwords                                                                                                         |
+| Path                                | Purpose                                                                                                                                                                         |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/index.php`                  | Front controller — bootstraps autoload, router, and dispatches requests                                                                                                         |
+| `public/.htaccess`                  | Apache rewrite rules: non-file/non-directory requests route to `public/index.php`                                                                                               |
+| `routes/web.php`                    | All route definitions — GET/POST mapped to controller methods                                                                                                                   |
+| `app/Config/config.php`             | Loads `.env` via phpdotenv; defines `APP_URL` constant and `env()` helper                                                                                                       |
+| `app/Config/database.php`           | `App\Config\Database` singleton — `Database::getConnection()` returns the shared `\mysqli` instance                                                                             |
+| `app/Config/cache.php`              | Cache bootstrap; exposes `appCache()` with graceful fallback when cache dir is not writable                                                                                     |
+| `app/Config/autoload.php`           | Bootstrap entry point: sets timezone, loads cache + database, starts session, calls `Auth::restoreFromCookie()`                                                                 |
+| `app/Core/Router.php`               | `App\Core\Router` — registers GET/POST routes, strips APP_URL base path, dispatches to controller                                                                               |
+| `app/Core/Controller.php`           | Abstract base — `render(string $view, array $data, bool $protected)` and `redirect(string $path)`                                                                               |
+| `app/Core/Model.php`                | Abstract base — holds `protected \mysqli $db`                                                                                                                                   |
+| `app/Core/Auth.php`                 | `App\Core\Auth` — credential verify, remember-me token issue/consume/clear, password reset tokens (stored as SHA-256 hash), `restoreFromCookie()`, lockout methods              |
+| `app/Model/LoginAttempt.php`        | `App\Model\LoginAttempt` — atomic `registerFailure()` via `INSERT ... ON DUPLICATE KEY UPDATE`, `lockedSecondsRemaining()`, `clear()`; `identifier` is the PK (no surrogate id) |
+| `app/Core/Csrf.php`                 | `App\Core\Csrf` — `token()` generates/returns session CSRF token; `verify()` validates `$_POST['_csrf']` with `hash_equals()`                                                   |
+| `app/Middleware/AuthMiddleware.php` | Static guards: `auth()`, `admin()`, `timeout(\mysqli)`                                                                                                                          |
+| `app/Controller/AuthController.php` | All auth logic: login, logout, forgotPassword, resetPassword                                                                                                                    |
+| `app/Controller/HomeController.php` | Dashboard: applies timeout + auth middleware, renders home view                                                                                                                 |
+| `app/Controller/UserController.php` | Full user CRUD — guarded by `admin()` middleware                                                                                                                                |
+| `app/Model/User.php`                | `App\Model\User` — all DB queries via MySQLi prepared statements                                                                                                                |
+| `app/Service/MailerService.php`     | PHPMailer encapsulation — SMTP via STARTTLS                                                                                                                                     |
+| `views/layouts/header.php`          | Shared `<head>` + nav for all protected pages; accepts `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`, `$pageStyles`                                                  |
+| `views/layouts/footer.php`          | Shared footer with version; accepts `$useDataTables`, `$pageScripts`                                                                                                            |
+| `views/layouts/messages.php`        | Centralized SweetAlert2 toast notification logic                                                                                                                                |
+| `views/home/index.php`              | Dashboard content only (hero + feature cards) — wrapped by shared layout via `protected: true`                                                                                  |
+| `views/auth/`                       | Standalone auth views (login, forgot-password, reset-password) — include their own `<head>`                                                                                     |
+| `views/user/`                       | Protected user CRUD views — wrapped by shared layout                                                                                                                            |
+| `public/css/estilo.css`             | Global styles + CSS palette variables (`--color-dark`, `--color-accent`)                                                                                                        |
+| `public/css/layout-protected.css`   | Full-height flex layout for protected pages                                                                                                                                     |
+| `public/js/users-table.js`          | DataTables initialization — loaded only in `UserController::index()` via `pageScripts`                                                                                          |
+| `public/js/users-delete.js`         | SweetAlert2 delete confirmation — loaded only in `UserController::index()` via `pageScripts`                                                                                    |
+| `database/schema.sql`               | Current DB schema — `users` + `password_resets` tables                                                                                                                          |
+| `database/seeds.sql`                | Sample users with bcrypt-hashed passwords                                                                                                                                       |
 
 ### Session Variables
 
@@ -144,6 +152,9 @@ Flash notifications (rendered by `views/layouts/messages.php`):
 - **users**: `id, first_name, last_name, email, username, password` (bcrypt), `is_admin (DEFAULT 0)`, `remember_token` (sha256 hash, nullable), `remember_token_expires` (datetime, nullable)
   - `email` and `username` have UNIQUE constraints; `remember_token` has an index (`idx_remember_token`)
 - **password_resets**: `id, email, token, created_at, expires_at, used`
+- **login_attempts**: `identifier` (PRIMARY KEY — varchar, normalized lowercase), `attempts`, `locked_until` (datetime, nullable), `last_attempt`
+  - No surrogate id — `identifier` is the natural key; one row per username tracked
+  - Only created for usernames that exist in `users`; deleted on successful login or password reset
 
 ## Frontend / Assets
 
@@ -205,13 +216,14 @@ Loaded **only** on `views/user/index.php` via `$useDataTables = true` (CSS in he
 - Session timeout: `AuthMiddleware::timeout()` called on every protected request; destroys session + clears remember cookie if `SESSION_TIMEOUT` seconds of inactivity exceeded
 - User delete uses POST — not exploitable via `<img>` tags or link prefetch; `users-delete.js` dynamically creates and submits a form with the CSRF token after SweetAlert2 confirmation
 - Flash messages rendered via `json_encode()` in `views/layouts/messages.php` — prevents XSS from user-controlled values (e.g. `first_name`) injected into the JavaScript SweetAlert2 call
+- **Account lockout**: `LoginAttempt::registerFailure()` uses `INSERT ... ON DUPLICATE KEY UPDATE` with `attempts + 1` evaluated in SQL — atomic, no read-modify-write race; `locked_until` set when `attempts >= LOGIN_MAX_ATTEMPTS`; all date math done in MySQL (`NOW()`, `DATE_ADD`, `TIMESTAMPDIFF`) to avoid PHP/MySQL drift; only tracked for existing usernames (`Auth::userExists()` checked before registering)
 
 ## Testing
 
 ### Stack
 
 - **PHPUnit ^11.0** — integration tests against a real MySQL database (`login_test`)
-- **28 tests total:** 14 in `tests/Unit/UserTest.php` (User model), 14 in `tests/Integration/AuthTest.php` (Auth class)
+- **40 tests total:** 14 in `tests/Unit/UserTest.php` (User model), 7 in `tests/Unit/LoginAttemptTest.php` (LoginAttempt model), 19 in `tests/Integration/AuthTest.php` (Auth class)
 - **CI:** `.github/workflows/tests.yml` — runs on push/PR to `master` with a MySQL 8.0 service
 
 ### Running tests locally
@@ -241,16 +253,17 @@ composer test:integration  # Auth class only
 
 ### Files
 
-| Path                             | Purpose                                                      |
-| -------------------------------- | ------------------------------------------------------------ |
-| `phpunit.xml`                    | PHPUnit 11 config — suites, bootstrap, env overrides         |
-| `.env.testing`                   | Test environment vars (gitignored)                           |
-| `database/schema_test.sql`       | Table-only schema for `login_test` (no `CREATE DATABASE`)    |
-| `tests/bootstrap.php`            | Minimal bootstrap — `.env.testing` → `$_ENV`, then autoload  |
-| `tests/TestCase.php`             | Abstract base — connection, schema, truncate, `createUser()` |
-| `tests/Unit/UserTest.php`        | 14 tests for `App\Model\User`                                |
-| `tests/Integration/AuthTest.php` | 14 tests for `App\Core\Auth`                                 |
-| `.github/workflows/tests.yml`    | GitHub Actions CI workflow                                   |
+| Path                              | Purpose                                                      |
+| --------------------------------- | ------------------------------------------------------------ |
+| `phpunit.xml`                     | PHPUnit 11 config — suites, bootstrap, env overrides         |
+| `.env.testing`                    | Test environment vars (gitignored)                           |
+| `database/schema_test.sql`        | Table-only schema for `login_test` (no `CREATE DATABASE`)    |
+| `tests/bootstrap.php`             | Minimal bootstrap — `.env.testing` → `$_ENV`, then autoload  |
+| `tests/TestCase.php`              | Abstract base — connection, schema, truncate, `createUser()` |
+| `tests/Unit/UserTest.php`         | 14 tests for `App\Model\User`                                |
+| `tests/Unit/LoginAttemptTest.php` | 7 tests for `App\Model\LoginAttempt`                         |
+| `tests/Integration/AuthTest.php`  | 19 tests for `App\Core\Auth`                                 |
+| `.github/workflows/tests.yml`     | GitHub Actions CI workflow                                   |
 
 ## Notes
 

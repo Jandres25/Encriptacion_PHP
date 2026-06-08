@@ -361,5 +361,5 @@ Plan en 4 fases con objetivo, archivos, decisiones técnicas y código completo.
 
 ---
 
-_Última actualización: 2026-06-07 — v1.6.1_
+_Última actualización: 2026-06-08 — v1.7.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._

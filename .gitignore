@@ -15,3 +15,4 @@ public/storage/
 
 # Claude
 .claude
+.mcp.json

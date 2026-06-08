@@ -6,6 +6,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.7.0] — 2026-06-08
+
+### Security
+
+- **Account lockout** — bloqueo automático de cuenta tras 5 intentos de login fallidos consecutivos (configurable):
+  - Nueva tabla `login_attempts` con `identifier` como `PRIMARY KEY` (sin surrogate id) — sin enumeración de usuarios: solo se registran intentos para usernames que existen en DB
+  - Nuevo modelo `App\Model\LoginAttempt` — `registerFailure()` atómico via `INSERT ... ON DUPLICATE KEY UPDATE` en SQL (sin race conditions), `lockedSecondsRemaining()` y `clear()` con operaciones temporales en MySQL (`NOW()`, `DATE_ADD`, `TIMESTAMPDIFF`) para evitar drift PHP/MySQL
+  - `App\Core\Auth` — 4 métodos nuevos: `lockedSecondsRemaining()`, `registerFailedAttempt()`, `clearFailedAttempts()`, `userExists()`; limpieza de lockout integrada en `consumeResetToken()` (limpia por email y por username)
+  - `AuthController::login()` — check de bloqueo antes de `verifyCredentials()`: contraseña correcta no levanta el bloqueo durante la ventana; mensaje con minutos restantes (`ceil`)
+  - Login exitoso elimina la fila de intentos (`DELETE`); reset de contraseña exitoso limpia lockout por ambos identificadores posibles
+  - Controlado por `LOGIN_LOCKOUT_ENABLED`, `LOGIN_MAX_ATTEMPTS` (default 5), `LOGIN_LOCKOUT_MINUTES` (default 15)
+- 7 nuevos tests en `tests/Unit/LoginAttemptTest.php` y 4 nuevos casos en `tests/Integration/AuthTest.php` — 40 tests en total
+
+---
+
 ## [1.6.1] — 2026-06-07
 
 ### Security
