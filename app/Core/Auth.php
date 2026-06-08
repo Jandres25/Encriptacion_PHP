@@ -2,15 +2,58 @@
 
 namespace App\Core;
 
+use App\Model\LoginAttempt;
 use App\Model\User;
 
 class Auth
 {
-    private User $userModel;
+    private User         $userModel;
+    private LoginAttempt $attempts;
 
     public function __construct(private \mysqli $connection)
     {
         $this->userModel = new User($connection);
+        $this->attempts  = new LoginAttempt($connection);
+    }
+
+    public function lockoutEnabled(): bool
+    {
+        return filter_var(env('LOGIN_LOCKOUT_ENABLED', true), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function maxAttempts(): int
+    {
+        return (int) env('LOGIN_MAX_ATTEMPTS', 5);
+    }
+
+    private function lockMinutes(): int
+    {
+        return (int) env('LOGIN_LOCKOUT_MINUTES', 15);
+    }
+
+    public function lockedSecondsRemaining(string $identifier): int
+    {
+        if (!$this->lockoutEnabled()) {
+            return 0;
+        }
+        return $this->attempts->lockedSecondsRemaining($identifier);
+    }
+
+    public function userExists(string $identifier): bool
+    {
+        return $this->userModel->getByUsername($identifier) !== null;
+    }
+
+    public function registerFailedAttempt(string $identifier): void
+    {
+        if ($this->lockoutEnabled()) {
+            $this->attempts->registerFailure($identifier, $this->maxAttempts(), $this->lockMinutes());
+        }
+    }
+
+    public function clearFailedAttempts(string $identifier): void
+    {
+        $this->attempts->clear($identifier);
     }
 
     public function verifyCredentials(string $username, string $password): ?array
@@ -85,6 +128,13 @@ class Auth
         $stmt->bind_param("s", $tokenHash);
         $stmt->execute();
         $stmt->close();
+
+        // Clear lockout for both email and username (either could have been used at login).
+        $this->clearFailedAttempts($reset['email']);
+        $user = $this->userModel->getByEmail($reset['email']);
+        if ($user) {
+            $this->clearFailedAttempts($user['username']);
+        }
 
         return $reset['email'];
     }

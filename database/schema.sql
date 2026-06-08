@@ -21,6 +21,15 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `idx_remember_token`    (`remember_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- Table: login_attempts
+CREATE TABLE IF NOT EXISTS `login_attempts` (
+  `identifier`   varchar(100) NOT NULL,
+  `attempts`     tinyint(4)   NOT NULL DEFAULT 0,
+  `locked_until` datetime              NULL DEFAULT NULL,
+  `last_attempt` datetime     NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`identifier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 -- Table: password_resets
 CREATE TABLE IF NOT EXISTS `password_resets` (
   `id`         int(11)      NOT NULL AUTO_INCREMENT,

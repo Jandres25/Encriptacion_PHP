@@ -46,9 +46,20 @@ class AuthController extends Controller
             $this->verifyCsrf('/login');
 
             if (!empty($_POST['usuario']) && !empty($_POST['password'])) {
-                $user = $this->auth->verifyCredentials($_POST['usuario'], $_POST['password']);
+                $identifier = $_POST['usuario'];
+
+                $remaining = $this->auth->lockedSecondsRemaining($identifier);
+                if ($remaining > 0) {
+                    $minutes = (int) ceil($remaining / 60);
+                    $_SESSION['message'] = "Account temporarily locked. Try again in {$minutes} minute(s).";
+                    $_SESSION['icon']    = 'warning';
+                    $this->redirect('/login');
+                }
+
+                $user = $this->auth->verifyCredentials($identifier, $_POST['password']);
 
                 if ($user) {
+                    $this->auth->clearFailedAttempts($identifier);
                     session_regenerate_id(true);
                     $_SESSION['user_id']       = $user['id'];
                     $_SESSION['name']          = $user['first_name'];
@@ -65,6 +76,9 @@ class AuthController extends Controller
                     $this->redirect('/');
                 }
 
+                if ($this->auth->userExists($identifier)) {
+                    $this->auth->registerFailedAttempt($identifier);
+                }
                 $_SESSION['message'] = 'Incorrect username or password';
                 $_SESSION['icon']    = 'error';
                 $this->redirect('/login');
