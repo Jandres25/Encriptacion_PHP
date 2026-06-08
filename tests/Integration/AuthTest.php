@@ -163,4 +163,72 @@ final class AuthTest extends TestCase
     {
         $this->assertNull($this->auth->consumeResetToken('not-a-real-token', 'x'));
     }
+
+    // --- lockout (LOGIN_LOCKOUT_ENABLED=false in .env.testing, so we force-enable via $_ENV) ---
+
+    #[Test]
+    public function lockout_disabled_always_returns_zero(): void
+    {
+        // Already disabled by .env.testing; verify the contract explicitly.
+        $this->assertSame(0, $this->auth->lockedSecondsRemaining('anyuser'));
+    }
+
+    #[Test]
+    public function user_exists_returns_true_for_known_username(): void
+    {
+        $this->createUser(['username' => 'knownuser']);
+        $this->assertTrue($this->auth->userExists('knownuser'));
+    }
+
+    #[Test]
+    public function user_exists_returns_false_for_unknown_username(): void
+    {
+        $this->assertFalse($this->auth->userExists('ghost'));
+    }
+
+    #[Test]
+    public function clear_failed_attempts_removes_both_email_and_username(): void
+    {
+        $_ENV['LOGIN_LOCKOUT_ENABLED'] = 'true';
+        $_ENV['LOGIN_MAX_ATTEMPTS']    = '2';
+        $_ENV['LOGIN_LOCKOUT_MINUTES'] = '15';
+
+        try {
+            $u = $this->createUser(['email' => 'lock@example.com', 'username' => 'lockuser']);
+
+            // Simulate enough failures on both identifiers to create rows.
+            for ($i = 0; $i < 2; $i++) {
+                self::$db->query("INSERT INTO login_attempts (identifier, attempts, last_attempt)
+                    VALUES ('lock@example.com', 1, NOW()), ('lockuser', 1, NOW())
+                    ON DUPLICATE KEY UPDATE attempts = attempts + 1, last_attempt = NOW()");
+            }
+
+            $this->auth->clearFailedAttempts('lock@example.com');
+            $this->auth->clearFailedAttempts($u['username']);
+
+            $this->assertSame(0, (int) self::$db->query("SELECT COUNT(*) c FROM login_attempts WHERE identifier IN ('lock@example.com','lockuser')")->fetch_assoc()['c']);
+        } finally {
+            $_ENV['LOGIN_LOCKOUT_ENABLED'] = 'false';
+            unset($_ENV['LOGIN_MAX_ATTEMPTS'], $_ENV['LOGIN_LOCKOUT_MINUTES']);
+        }
+    }
+
+    #[Test]
+    public function consume_reset_token_clears_lockout_for_email_and_username(): void
+    {
+        $this->createUser(['email' => 'lock2@example.com', 'username' => 'lockuser2']);
+        $token = $this->auth->createPasswordResetToken('lock2@example.com');
+
+        // Insert lockout rows manually.
+        self::$db->query("INSERT INTO login_attempts (identifier, attempts, locked_until, last_attempt)
+            VALUES ('lock2@example.com', 5, DATE_ADD(NOW(), INTERVAL 10 MINUTE), NOW()),
+                   ('lockuser2', 5, DATE_ADD(NOW(), INTERVAL 10 MINUTE), NOW())");
+
+        $this->auth->consumeResetToken($token, 'newpassword');
+
+        $count = (int) self::$db->query(
+            "SELECT COUNT(*) c FROM login_attempts WHERE identifier IN ('lock2@example.com','lockuser2')"
+        )->fetch_assoc()['c'];
+        $this->assertSame(0, $count);
+    }
 }
