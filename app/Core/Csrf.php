@@ -18,6 +18,12 @@ class Csrf
     {
         $submitted = $_POST['_csrf'] ?? '';
         $stored    = $_SESSION[self::SESSION_KEY] ?? '';
-        return $submitted !== '' && $stored !== '' && hash_equals($stored, $submitted);
+        $valid     = $submitted !== '' && $stored !== '' && hash_equals($stored, $submitted);
+
+        if ($valid) {
+            unset($_SESSION[self::SESSION_KEY]);
+        }
+
+        return $valid;
     }
 }

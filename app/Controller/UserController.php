@@ -80,6 +80,13 @@ class UserController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user'])) {
             $this->verifyCsrf('/users/edit?id=' . (int) ($_POST['id'] ?? 0));
             $id   = (int) $_POST['id'];
+
+            if ($id === (int) $_SESSION['user_id'] && !isset($_POST['is_admin'])) {
+                $_SESSION['message'] = 'You cannot remove your own admin privileges';
+                $_SESSION['icon']    = 'error';
+                $this->redirect('/users/edit?id=' . $id);
+            }
+
             $data = [
                 'first_name' => $_POST['first_name'],
                 'last_name'  => $_POST['last_name'],
@@ -129,7 +136,14 @@ class UserController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
             $this->verifyCsrf('/users');
-            $id      = (int) $_POST['id'];
+            $id = (int) $_POST['id'];
+
+            if ($id === (int) $_SESSION['user_id']) {
+                $_SESSION['message'] = 'You cannot delete your own account';
+                $_SESSION['icon']    = 'error';
+                $this->redirect('/users');
+            }
+
             $deleted = $this->userModel->delete($id);
 
             $_SESSION['message'] = $deleted ? 'User deleted successfully' : 'Failed to delete user';

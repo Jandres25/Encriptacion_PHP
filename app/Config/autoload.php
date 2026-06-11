@@ -7,8 +7,21 @@ date_default_timezone_set(env('APP_TIMEZONE', 'America/La_Paz'));
 require_once __DIR__ . '/cache.php';
 require_once __DIR__ . '/database.php';
 
-if (session_status() === PHP_SESSION_NONE) {
+function session_start_secure(): void
+{
+    if (session_status() !== PHP_SESSION_NONE) {
+        return;
+    }
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => str_starts_with(env('APP_URL', ''), 'https'),
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
     session_start();
 }
+
+session_start_secure();
 
 (new Auth($connection))->restoreFromCookie();

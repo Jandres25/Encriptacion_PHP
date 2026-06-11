@@ -94,6 +94,7 @@ class AuthController extends Controller
 
     public function logout(): void
     {
+        $this->verifyCsrf('/');
         $userId = $_SESSION['user_id'] ?? null;
 
         if ($userId && isset($_COOKIE[self::REMEMBER_COOKIE])) {
@@ -102,7 +103,7 @@ class AuthController extends Controller
         }
 
         session_destroy();
-        session_start();
+        session_start_secure();
         $_SESSION['message'] = 'Logged out successfully';
         $_SESSION['icon']    = 'success';
         $this->redirect('/login');
@@ -115,22 +116,13 @@ class AuthController extends Controller
             $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
             $token = $this->auth->createPasswordResetToken($email);
 
-            if (!$token) {
-                $_SESSION['message'] = 'Email not registered in the system';
-                $_SESSION['icon']    = 'error';
-                $this->redirect('/forgot-password');
+            if ($token) {
+                $resetUrl = APP_URL . '/reset-password?token=' . urlencode($token);
+                $this->mailer->sendResetEmail($email, $resetUrl);
             }
 
-            $resetUrl = APP_URL . '/reset-password?token=' . urlencode($token);
-
-            if ($this->mailer->sendResetEmail($email, $resetUrl)) {
-                $_SESSION['message'] = 'A recovery link has been sent to your email';
-                $_SESSION['icon']    = 'success';
-                $this->redirect('/');
-            }
-
-            $_SESSION['message'] = 'Failed to send recovery email';
-            $_SESSION['icon']    = 'error';
+            $_SESSION['message'] = 'If that email is registered, a recovery link has been sent';
+            $_SESSION['icon']    = 'info';
             $this->redirect('/forgot-password');
         }
 

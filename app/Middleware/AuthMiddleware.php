@@ -18,7 +18,8 @@ class AuthMiddleware
     {
         self::auth();
         if (empty($_SESSION['is_admin'])) {
-            header('Location: ' . APP_URL . '/');
+            http_response_code(403);
+            require __DIR__ . '/../../views/errors/403.php';
             exit;
         }
     }
@@ -42,7 +43,7 @@ class AuthMiddleware
                 ]);
             }
             session_destroy();
-            session_start();
+            session_start_secure();
             $_SESSION['message'] = 'Your session has expired due to inactivity';
             $_SESSION['icon']    = 'warning';
             header('Location: ' . APP_URL . '/login');

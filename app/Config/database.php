@@ -17,7 +17,10 @@ class Database
             );
 
             if ($conn->connect_error) {
-                die("Database connection error: " . $conn->connect_error);
+                error_log("DB connection failed: " . $conn->connect_error);
+                http_response_code(503);
+                require __DIR__ . '/../../views/errors/500.php';
+                exit;
             }
 
             self::$instance = $conn;

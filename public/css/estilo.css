@@ -131,6 +131,19 @@ body.dashboard main {
   align-items: center;
 }
 
+/* Logout button — behaves like a nav-link visually */
+.btn-logout-nav {
+  background: none;
+  border: none;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: 1.5;
+  display: inline-flex;
+  align-items: center;
+}
+
 .feature-icon {
   width: 56px;
   height: 56px;

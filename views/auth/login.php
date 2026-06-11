@@ -7,12 +7,11 @@
 
     <link rel="stylesheet" href="<?= APP_URL ?>/css/bootstrap.css">
     <link rel="stylesheet" href="<?= APP_URL ?>/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= APP_URL ?>/css/all.min.css">
     <link href="<?= APP_URL ?>/img/candado.png" rel="shortcut icon">
     <link rel="stylesheet" href="<?= APP_URL ?>/css/sweetalert2.min.css">
     <script src="<?= APP_URL ?>/js/sweetalert2.all.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="<?= APP_URL ?>/js/jquery.min.js"></script>
     <title>Login</title>
 </head>
 

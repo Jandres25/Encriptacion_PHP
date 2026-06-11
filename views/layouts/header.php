@@ -59,9 +59,12 @@
                         </span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger" href="<?= APP_URL ?>/logout">
-                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
-                        </a>
+                        <form method="post" action="<?= APP_URL ?>/logout" class="d-inline">
+                            <input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">
+                            <button type="submit" class="btn-logout-nav nav-link text-danger">
+                                <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>
