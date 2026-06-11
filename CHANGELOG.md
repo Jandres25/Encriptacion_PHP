@@ -6,6 +6,32 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.8.0] — 2026-06-11
+
+### Security
+
+- **HTTP Security Headers** — `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection: 1; mode=block`, `Permissions-Policy` y `Content-Security-Policy` base (`default-src 'self'`, `form-action 'self'`, `frame-ancestors 'none'`) agregados en `public/.htaccess` via `mod_headers`; HSTS comentado listo para activar en HTTPS
+- **Eliminación de dependencias externas en vistas auth** — jQuery y Google Fonts cargaban desde CDN externo (`code.jquery.com`, `fonts.googleapis.com`) sin SRI en las vistas de login, forgot-password y reset-password; reemplazados por assets self-hosted para eliminar vector de supply-chain y fuga de token de reset via cabecera `Referer`
+- **Cookie de sesión segura** — `session_start()` centralizado en helper `session_start_secure()` (en `app/Config/autoload.php`) que aplica `httponly=true`, `samesite=Strict` y `secure` condicional (HTTPS) en todos los puntos donde se inicia sesión: bootstrap inicial, logout y timeout de inactividad
+- **Logout cambiado de GET a POST con CSRF** — la ruta `/logout` era un `GET` sin protección, explotable con `<img src="...">` para cerrar sesión ajena; ahora es `POST` con token CSRF verificado en `AuthController::logout()`; el link en `header.php` fue reemplazado por un formulario con botón estilizado
+- **Eliminación de user enumeration en forgot-password** — `AuthController::forgotPassword()` retornaba mensajes distintos según si el email existía o no; ahora responde siempre con el mismo mensaje genérico independientemente del resultado, enviando el email silenciosamente si el token se creó
+- **Rotación de token CSRF** — `Csrf::verify()` ahora invalida el token de sesión tras cada verificación exitosa (`unset($_SESSION['csrf_token'])`), forzando regeneración en el siguiente request
+- **Protección contra auto-eliminación y auto-degradación de admin** — `UserController::delete()` bloquea la eliminación del propio usuario autenticado; `UserController::edit()` bloquea quitar el propio rol `is_admin`
+- **Error de conexión DB no expone detalles internos** — `Database::getConnection()` registra el error via `error_log()` y muestra la vista de error 500 en lugar del mensaje crudo de MySQLi con host/puerto
+
+### Added
+
+- **Páginas de error personalizadas** — nuevas vistas en `views/errors/`: `404.php` (ruta no encontrada), `403.php` (acceso denegado), `500.php` (error de servidor); comparten `layout.php` standalone (sin depender del layout de la app ni de la DB) con el gradiente y paleta de colores del proyecto
+- `Router::dispatch()` renderiza `views/errors/404.php` en lugar de imprimir el path interno
+- `AuthMiddleware::admin()` devuelve HTTP 403 con la vista de error en lugar de redirigir silenciosamente al home
+
+### Fixed
+
+- Alineación del botón Logout en la navbar — reemplazado inline styles por clase CSS `.btn-logout-nav` en `estilo.css`
+- `storage/.htaccess` con `Require all denied` para proteger explícitamente los archivos de caché
+
+---
+
 ## [1.7.0] — 2026-06-08
 
 ### Security

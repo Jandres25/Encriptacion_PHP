@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.7.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.7.0)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.8.0)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -25,6 +25,9 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - `App\Config\Database` singleton — single `\mysqli` connection per request
 - File-based cache for the users listing with automatic invalidation on writes
 - **Account lockout** — automatic account lock after N failed login attempts; configurable threshold and duration via `.env`
+- **HTTP Security Headers** — `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy` and more via `mod_headers` in `.htaccess`; HSTS ready for HTTPS
+- **Secure session cookie** — `session_start_secure()` helper enforces `HttpOnly`, `SameSite=Strict` and conditional `Secure` flag on every session start
+- **Custom error pages** — styled 404, 403 and 500 views matching the app's design; standalone (no DB dependency)
 - **Integration test suite** — 40 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
 - SweetAlert2 toast notifications for all CRUD and authentication actions
 - Per-page asset injection — `$pageStyles` / `$pageScripts` arrays in shared layouts
@@ -75,7 +78,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.7.0
+APP_VERSION=1.8.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -147,9 +150,11 @@ mysql -u root -p < database/seeds.sql
 ├── routes/
 │   └── web.php                 # All route definitions
 ├── storage/
+│   ├── .htaccess               # Require all denied — blocks direct web access to cache files
 │   └── cache/                  # Runtime cache files (*.cache)
 ├── views/
-│   ├── auth/                   # login, forgot_password, reset_password (standalone)
+│   ├── auth/                   # login, forgot_password, reset_password (standalone, self-hosted assets)
+│   ├── errors/                 # 404.php, 403.php, 500.php + layout.php (standalone, no DB dependency)
 │   ├── home/                   # index.php — dashboard content (wrapped by shared layout)
 │   ├── layouts/                # header.php, footer.php, messages.php
 │   └── user/                   # index, create, edit (wrapped by shared layout)
@@ -159,7 +164,7 @@ mysql -u root -p < database/seeds.sql
 │   ├── Unit/
 │   │   └── UserTest.php        # 14 integration tests for App\Model\User
 │   └── Integration/
-│       └── AuthTest.php        # 14 integration tests for App\Core\Auth
+│       └── AuthTest.php        # 19 integration tests for App\Core\Auth
 ├── .env.example                # Environment variable template
 ├── phpunit.xml                 # PHPUnit 11 configuration
 └── composer.json               # Composer dependencies and PSR-4 autoload
@@ -180,7 +185,7 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 | --------------------------- | ---------------------------------- |
 | `/`                         | `HomeController::index()`          |
 | `/login`                    | `AuthController::login()`          |
-| `/logout`                   | `AuthController::logout()`         |
+| `POST /logout`              | `AuthController::logout()`         |
 | `/forgot-password`          | `AuthController::forgotPassword()` |
 | `/reset-password?token=...` | `AuthController::resetPassword()`  |
 | `/users`                    | `UserController::index()`          |
@@ -192,15 +197,22 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 
 - Passwords hashed with bcrypt (`PASSWORD_DEFAULT`)
 - Session set only after successful `password_verify()`; `session_regenerate_id(true)` called immediately after to prevent session fixation
-- **CSRF tokens** on all POST forms — generated via `App\Core\Csrf::token()`, validated with `hash_equals()` in every controller
+- **Secure session cookie** — `session_start_secure()` helper enforces `HttpOnly`, `SameSite=Strict`, and `Secure` (on HTTPS) on every session start — including after logout and session timeout
+- **HTTP Security Headers** — `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Content-Security-Policy`, `Permissions-Policy` set in `public/.htaccess` via `mod_headers`; HSTS commented out, ready for HTTPS
+- **CSRF tokens** on all POST forms — generated via `App\Core\Csrf::token()`, validated with `hash_equals()` in every controller; **token rotated** after each successful verification
+- **Logout is POST-only** — protected by CSRF token; prevents logout CSRF via `<img>` or link
 - Reset tokens: 256-bit (`bin2hex(random_bytes(32))`), 1-hour expiry, single-use, stored as SHA-256 hash in DB
+- **User enumeration prevention** — `forgot-password` always returns the same generic response regardless of whether the email is registered
 - All DB queries via MySQLi prepared statements
+- **Self-hosted assets** — no external CDN in any view; eliminates supply-chain risk and `Referer` header token leakage
 - Email validated with `filter_var()` before DB lookup
 - SMTP with STARTTLS (port 587)
 - Remember-me: raw token in cookie, SHA-256 hash in DB — cookie is `HttpOnly`, `SameSite=Strict`, `Secure` on HTTPS
 - Session timeout enforced on every protected request; clears remember cookie to prevent silent re-login
 - User delete requires POST — not exploitable via `<img>` or link prefetch
+- **Admin self-protection** — admins cannot delete their own account or remove their own `is_admin` flag
 - **Account lockout** — 5 consecutive failed logins lock the account for 15 min (configurable); only tracked for existing usernames; lockout cleared on successful login or password reset
+- **Custom error pages** — 404, 403, 500 views are standalone (no DB/session dependency); DB errors logged via `error_log()`, never exposed to the browser
 
 ## Cache
 
@@ -245,12 +257,16 @@ Tests run automatically on every push and PR to `master` via GitHub Actions (`.g
 3. Commit your changes following [Conventional Commits](https://www.conventionalcommits.org/)
 4. Push and open a Pull Request
 
+<div align="center">
+
 ## License
 
 MIT License — see the `LICENSE` file for details.
 
-## Contact
+---
 
 Jandres25 — jandrespb4@gmail.com
 
-Project link: [https://github.com/Jandres25/Encriptacion_PHP](https://github.com/Jandres25/Encriptacion_PHP)
+[https://github.com/Jandres25/Encriptacion_PHP](https://github.com/Jandres25/Encriptacion_PHP)
+
+</div>

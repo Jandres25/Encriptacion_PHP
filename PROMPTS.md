@@ -101,10 +101,14 @@ Descripción: [criterios de aceptación]
 - Flash notifications con $_SESSION['message'] + $_SESSION['icon'] — nunca por URL
 - Detección de POST: isset($_POST['btnXXX']) — no !empty() — porque <button> sin value envía string vacío
 - Guards al inicio del método: AuthMiddleware::timeout() + AuthMiddleware::admin() o auth()
-- CSRF: todos los formularios POST deben incluir `<input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">` y el controller debe llamar `$this->verifyCsrf($redirectPath)` al inicio del bloque POST — el token se crea una vez por sesión y se verifica en cada POST sin rotarlo (session_regenerate_id en login ya lo invalida)
+- CSRF: todos los formularios POST deben incluir `<input type="hidden" name="_csrf" value="<?= \App\Core\Csrf::token() ?>">` y el controller debe llamar `$this->verifyCsrf($redirectPath)` al inicio del bloque POST — el token **se rota tras cada verificación exitosa** (`Csrf::verify()` elimina el token de sesión, forzando regeneración en el siguiente `token()`)
 - Invalidar caché en operaciones write: appCache()->delete('users.all') o el key correspondiente
 - Vistas protegidas solo tienen contenido (sin <html>/<head>/<body>) — el layout lo pone render()
 - No agregar comentarios obvios — solo donde el WHY no sea evidente
+- No usar `session_start()` directamente — usar siempre `session_start_secure()` (definido en `app/Config/autoload.php`)
+- No cargar assets desde CDN externos — usar siempre archivos self-hosted bajo `APP_URL`
+- Logout es POST-only con CSRF — nunca agregar rutas GET para operaciones con side-effects
+- Páginas de error: usar `views/errors/404.php`, `403.php`, `500.php` — no `die()` con texto plano ni `echo` del path interno
 
 [Formato de salida]
 Devuelve en este orden:
@@ -361,5 +365,5 @@ Plan en 4 fases con objetivo, archivos, decisiones técnicas y código completo.
 
 ---
 
-_Última actualización: 2026-06-08 — v1.7.0_
+_Última actualización: 2026-06-11 — v1.8.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._
