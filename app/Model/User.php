@@ -166,6 +166,52 @@ class User extends Model
         return $success;
     }
 
+    public function updateProfile(int $id, array $data): bool
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE users SET first_name=?, last_name=?, email=?, username=? WHERE id=?"
+        );
+        $stmt->bind_param(
+            "ssssi",
+            $data['first_name'],
+            $data['last_name'],
+            $data['email'],
+            $data['username'],
+            $id
+        );
+        $stmt->execute();
+        $success = $stmt->affected_rows !== -1;
+        $stmt->close();
+        if ($success) {
+            appCache()->forget(self::CACHE_KEY_ALL_USERS);
+        }
+        return $success;
+    }
+
+    public function getPasswordById(int $id): ?string
+    {
+        $stmt = $this->db->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return $row['password'] ?? null;
+    }
+
+    public function updatePasswordProfile(int $id, string $newPassword): bool
+    {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->db->prepare("UPDATE users SET password=? WHERE id=?");
+        $stmt->bind_param("si", $hashedPassword, $id);
+        $stmt->execute();
+        $success = $stmt->affected_rows > 0;
+        $stmt->close();
+        if ($success) {
+            appCache()->forget(self::CACHE_KEY_ALL_USERS);
+        }
+        return $success;
+    }
+
     public function updatePassword(string $email, string $newPassword): bool
     {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
