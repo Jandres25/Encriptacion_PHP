@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Model\ActivityLog;
 use App\Service\MailerService;
 
 class AuthController extends Controller
@@ -68,6 +69,8 @@ class AuthController extends Controller
                     $_SESSION['message']       = "Welcome, " . $user['first_name'] . "!";
                     $_SESSION['icon']          = 'success';
 
+                    ActivityLog::log(ActivityLog::EVENT_LOGIN_SUCCESS, "Login: {$user['username']}", $user['id']);
+
                     if ($this->rememberEnabled() && !empty($_POST['remember'])) {
                         $token = $this->auth->issueRememberToken($user['id']);
                         setcookie(self::REMEMBER_COOKIE, $token, $this->cookieOptions($this->auth->rememberTtl()));
@@ -79,6 +82,7 @@ class AuthController extends Controller
                 if ($this->auth->userExists($identifier)) {
                     $this->auth->registerFailedAttempt($identifier);
                 }
+                ActivityLog::log(ActivityLog::EVENT_LOGIN_FAILED, "Failed login attempt: {$identifier}");
                 $_SESSION['message'] = 'Incorrect username or password';
                 $_SESSION['icon']    = 'error';
                 $this->redirect('/login');
@@ -96,6 +100,8 @@ class AuthController extends Controller
     {
         $this->verifyCsrf('/');
         $userId = $_SESSION['user_id'] ?? null;
+
+        ActivityLog::log(ActivityLog::EVENT_LOGOUT, 'User logged out', $userId ? (int) $userId : null);
 
         if ($userId && isset($_COOKIE[self::REMEMBER_COOKIE])) {
             $this->auth->clearRememberToken((int) $userId);
@@ -146,6 +152,14 @@ class AuthController extends Controller
             $email = $this->auth->consumeResetToken($token, $newPassword);
 
             if ($email) {
+                $stmt = $this->connection->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                $row    = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                $userId = $row ? (int) $row['id'] : null;
+                ActivityLog::log(ActivityLog::EVENT_PASSWORD_RESET, "Password reset via email: {$email}", $userId);
+
                 $_SESSION['message'] = 'Password updated successfully';
                 $_SESSION['icon']    = 'success';
                 $this->redirect('/login');

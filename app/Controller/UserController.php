@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Core\Controller;
 use App\Middleware\AuthMiddleware;
+use App\Model\ActivityLog;
 use App\Model\User;
 
 class UserController extends Controller
@@ -58,6 +59,7 @@ class UserController extends Controller
             }
 
             if ($this->userModel->create($data)) {
+                ActivityLog::log(ActivityLog::EVENT_USER_CREATED, "User created: {$data['username']}", (int) $_SESSION['user_id']);
                 $_SESSION['message'] = 'User added successfully';
                 $_SESSION['icon']    = 'success';
                 $this->redirect('/users');
@@ -105,6 +107,7 @@ class UserController extends Controller
             }
 
             if ($this->userModel->update($id, $data)) {
+                ActivityLog::log(ActivityLog::EVENT_USER_UPDATED, "User updated: {$data['username']} (id:{$id})", (int) $_SESSION['user_id']);
                 $_SESSION['message'] = 'User updated successfully';
                 $_SESSION['icon']    = 'success';
                 $this->redirect('/users');
@@ -144,7 +147,12 @@ class UserController extends Controller
                 $this->redirect('/users');
             }
 
+            $target  = $this->userModel->getById($id);
             $deleted = $this->userModel->delete($id);
+
+            if ($deleted && $target) {
+                ActivityLog::log(ActivityLog::EVENT_USER_DELETED, "User deleted: {$target['username']} (id:{$id})", (int) $_SESSION['user_id']);
+            }
 
             $_SESSION['message'] = $deleted ? 'User deleted successfully' : 'Failed to delete user';
             $_SESSION['icon']    = $deleted ? 'success' : 'error';

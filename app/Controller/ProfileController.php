@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Core\Controller;
 use App\Middleware\AuthMiddleware;
+use App\Model\ActivityLog;
 use App\Model\User;
 
 class ProfileController extends Controller
@@ -102,6 +103,7 @@ class ProfileController extends Controller
         }
 
         if ($this->userModel->updatePasswordProfile($id, $new)) {
+            ActivityLog::log(ActivityLog::EVENT_PASSWORD_CHANGED, 'Password changed via profile', $id);
             $_SESSION['message'] = 'Password updated successfully';
             $_SESSION['icon']    = 'success';
         } else {
