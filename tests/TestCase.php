@@ -80,6 +80,7 @@ abstract class TestCase extends BaseTestCase
         self::$db->query('TRUNCATE TABLE users');
         self::$db->query('TRUNCATE TABLE password_resets');
         self::$db->query('TRUNCATE TABLE login_attempts');
+        self::$db->query('TRUNCATE TABLE activity_logs');
         self::$db->query('SET FOREIGN_KEY_CHECKS=1');
     }
 
