@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.8.0)
+[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.9.0)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -21,6 +21,7 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - Persistent login via **Remember Me** — `HttpOnly` / `SameSite=Strict` cookie; token stored as SHA-256 hash in DB
 - Automatic **session timeout** on inactivity with remember cookie cleanup
 - Password recovery via email with expiring single-use tokens stored as SHA-256 hash (PHPMailer + STARTTLS)
+- **User profile** — authenticated users can edit their name, email and username, or change their password, at `/profile`; each action has its own CSRF-protected form
 - Admin user management — full CRUD with role-based access control (`AuthMiddleware`)
 - `App\Config\Database` singleton — single `\mysqli` connection per request
 - File-based cache for the users listing with automatic invalidation on writes
@@ -78,7 +79,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.8.0
+APP_VERSION=1.9.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -117,9 +118,10 @@ mysql -u root -p < database/seeds.sql
 │   │   ├── config.php         # Loads .env via phpdotenv; defines APP_URL + env()
 │   │   └── database.php       # Database singleton — Database::getConnection()
 │   ├── Controller/
-│   │   ├── AuthController.php  # login, logout, forgotPassword, resetPassword
-│   │   ├── HomeController.php  # Dashboard — applies timeout + auth middleware
-│   │   └── UserController.php  # Full user CRUD — guarded by admin middleware
+│   │   ├── AuthController.php    # login, logout, forgotPassword, resetPassword
+│   │   ├── HomeController.php    # Dashboard — applies timeout + auth middleware
+│   │   ├── ProfileController.php # profile(), changePassword() — any authenticated user
+│   │   └── UserController.php    # Full user CRUD — guarded by admin middleware
 │   ├── Core/
 │   │   ├── Auth.php            # Credential verify, remember-me tokens, password reset tokens
 │   │   ├── Controller.php      # Abstract base — render(), redirect(), verifyCsrf()
@@ -157,6 +159,7 @@ mysql -u root -p < database/seeds.sql
 │   ├── errors/                 # 404.php, 403.php, 500.php + layout.php (standalone, no DB dependency)
 │   ├── home/                   # index.php — dashboard content (wrapped by shared layout)
 │   ├── layouts/                # header.php, footer.php, messages.php
+│   ├── profile/                # index.php — unified profile + change password view
 │   └── user/                   # index, create, edit (wrapped by shared layout)
 ├── tests/
 │   ├── bootstrap.php           # Test bootstrap — loads .env.testing, never starts session
@@ -174,8 +177,9 @@ mysql -u root -p < database/seeds.sql
 
 1. Open `http://localhost/Encriptacion_PHP/public/` in your browser
 2. Log in with a seeded user (e.g. username `Admin`, password `Admin1234`)
-3. Admin users (`is_admin = 1`) see the **Users** link in the nav → full CRUD
-4. To recover a password, click "Forgot your password?" on the login page
+3. Click your username in the nav to access your **profile** — edit info or change password
+4. Admin users (`is_admin = 1`) see the **Users** link in the nav → full CRUD
+5. To recover a password, click "Forgot your password?" on the login page
 
 ## URL Routing
 
@@ -188,6 +192,8 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 | `POST /logout`              | `AuthController::logout()`         |
 | `/forgot-password`          | `AuthController::forgotPassword()` |
 | `/reset-password?token=...` | `AuthController::resetPassword()`  |
+| `/profile`                  | `ProfileController::profile()`     |
+| `POST /profile/password`    | `ProfileController::changePassword()` |
 | `/users`                    | `UserController::index()`          |
 | `/users/create`             | `UserController::create()`         |
 | `/users/edit?id=X`          | `UserController::edit()`           |

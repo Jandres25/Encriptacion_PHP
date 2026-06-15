@@ -47,7 +47,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.8.0
+APP_VERSION=1.9.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -87,15 +87,17 @@ Browser → public/index.php → App\Core\Router → Controller::method()
 
 | URL                         | Controller method                  |
 | --------------------------- | ---------------------------------- |
-| `/`                         | `HomeController::index()`          |
-| `/login`                    | `AuthController::login()`          |
-| `/logout`                   | `AuthController::logout()`         |
-| `/forgot-password`          | `AuthController::forgotPassword()` |
-| `/reset-password?token=...` | `AuthController::resetPassword()`  |
-| `/users`                    | `UserController::index()`          |
-| `/users/create`             | `UserController::create()`         |
-| `/users/edit?id=X`          | `UserController::edit()`           |
-| `POST /users/delete`        | `UserController::delete()`         |
+| `/`                         | `HomeController::index()`             |
+| `/login`                    | `AuthController::login()`             |
+| `/logout`                   | `AuthController::logout()`            |
+| `/forgot-password`          | `AuthController::forgotPassword()`    |
+| `/reset-password?token=...` | `AuthController::resetPassword()`     |
+| `/profile`                  | `ProfileController::profile()`        |
+| `POST /profile/password`    | `ProfileController::changePassword()` |
+| `/users`                    | `UserController::index()`             |
+| `/users/create`             | `UserController::create()`            |
+| `/users/edit?id=X`          | `UserController::edit()`              |
+| `POST /users/delete`        | `UserController::delete()`            |
 
 ### Key Files
 
@@ -115,16 +117,18 @@ Browser → public/index.php → App\Core\Router → Controller::method()
 | `app/Model/LoginAttempt.php`        | `App\Model\LoginAttempt` — atomic `registerFailure()` via `INSERT ... ON DUPLICATE KEY UPDATE`, `lockedSecondsRemaining()`, `clear()`; `identifier` is the PK (no surrogate id) |
 | `app/Core/Csrf.php`                 | `App\Core\Csrf` — `token()` generates/returns session CSRF token; `verify()` validates `$_POST['_csrf']` with `hash_equals()`                                                   |
 | `app/Middleware/AuthMiddleware.php` | Static guards: `auth()`, `admin()`, `timeout(\mysqli)`                                                                                                                          |
-| `app/Controller/AuthController.php` | All auth logic: login, logout, forgotPassword, resetPassword                                                                                                                    |
-| `app/Controller/HomeController.php` | Dashboard: applies timeout + auth middleware, renders home view                                                                                                                 |
-| `app/Controller/UserController.php` | Full user CRUD — guarded by `admin()` middleware                                                                                                                                |
-| `app/Model/User.php`                | `App\Model\User` — all DB queries via MySQLi prepared statements                                                                                                                |
+| `app/Controller/AuthController.php`    | All auth logic: login, logout, forgotPassword, resetPassword                                                                                                                 |
+| `app/Controller/HomeController.php`    | Dashboard: applies timeout + auth middleware, renders home view                                                                                                               |
+| `app/Controller/ProfileController.php` | User profile: `profile()` (edit info) and `changePassword()` — any authenticated user; `$id` always from `$_SESSION['user_id']`                                              |
+| `app/Controller/UserController.php`    | Full user CRUD — guarded by `admin()` middleware                                                                                                                              |
+| `app/Model/User.php`                   | `App\Model\User` — all DB queries via MySQLi prepared statements; `updateProfile()` (info only, no password/is_admin), `getPasswordById()`, `updatePasswordProfile()` (by id) |
 | `app/Service/MailerService.php`     | PHPMailer encapsulation — SMTP via STARTTLS                                                                                                                                     |
 | `views/layouts/header.php`          | Shared `<head>` + nav for all protected pages; accepts `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`, `$pageStyles`                                                  |
 | `views/layouts/footer.php`          | Shared footer with version; accepts `$useDataTables`, `$pageScripts`                                                                                                            |
 | `views/layouts/messages.php`        | Centralized SweetAlert2 toast notification logic                                                                                                                                |
 | `views/home/index.php`              | Dashboard content only (hero + feature cards) — wrapped by shared layout via `protected: true`                                                                                  |
 | `views/auth/`                       | Standalone auth views (login, forgot-password, reset-password) — include their own `<head>`; assets self-hosted (no external CDN)                                               |
+| `views/profile/index.php`           | Unified profile view — two independent forms: edit info (`POST /profile`) and change password (`POST /profile/password`); each with its own `_csrf` token                      |
 | `views/user/`                       | Protected user CRUD views — wrapped by shared layout                                                                                                                            |
 | `views/errors/`                     | Standalone error views (`404.php`, `403.php`, `500.php`) sharing `layout.php` — no app layout dependency; used by Router, AuthMiddleware and Database on failure                |
 | `storage/.htaccess`                 | `Require all denied` — prevents direct web access to cache files                                                                                                                |

@@ -6,6 +6,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.9.0] — 2026-06-14
+
+### Added
+
+- **Perfil de usuario** — nueva sección `/profile` accesible para cualquier usuario autenticado (sin requisito de admin):
+  - `ProfileController` con métodos `profile()` (editar info) y `changePassword()` (cambiar contraseña)
+  - Vista unificada `views/profile/index.php` con dos formularios independientes, cada uno con su propio token CSRF
+  - Form 1 (`POST /profile`): edita `first_name`, `last_name`, `email`, `username`; valida unicidad excluyendo el propio ID; actualiza `$_SESSION['name']` si cambia el nombre
+  - Form 2 (`POST /profile/password`): requiere contraseña actual con `password_verify()`; valida coincidencia y mínimo 8 caracteres; usa `updatePasswordProfile()` independiente del flujo de reset por email
+  - `User::updateProfile()` — UPDATE limitado a `first_name`, `last_name`, `email`, `username`; sin acceso a `password` ni `is_admin` (previene escalada de privilegios vía IDOR)
+  - `User::getPasswordById()` — SELECT solo del hash para verificar la contraseña actual sin cargar la fila completa
+  - `User::updatePasswordProfile()` — UPDATE de contraseña por `id` (no por email), independiente de `updatePassword()` que sigue siendo exclusivo del flujo de reset
+  - Nombre de usuario en el nav convertido en enlace a `/profile` (visible para todos los usuarios autenticados)
+  - Ambas operaciones invalidan la caché `users.all`
+
+---
+
 ## [1.8.0] — 2026-06-11
 
 ### Security

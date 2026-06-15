@@ -365,5 +365,57 @@ Plan en 4 fases con objetivo, archivos, decisiones técnicas y código completo.
 
 ---
 
-_Última actualización: 2026-06-11 — v1.8.0_
+---
+
+## Ejemplo real — Perfil de usuario (implementado en v1.9.0)
+
+> Prompt de feature con vista unificada y métodos de modelo independientes.
+
+```
+[Rol]
+Actúa como desarrollador PHP Senior especializado en arquitectura MVC
+y seguridad web (autenticación, hashing, sesiones).
+
+[Contexto]
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: PHP 8.2+, MySQLi, Bootstrap 4, SweetAlert2.
+Módulo: profile (nuevo).
+
+[Tarea]
+Implementar perfil de usuario con dos sub-features en una sola vista:
+
+1. profile() — Editar información del perfil
+   - GET /profile muestra la vista; POST /profile procesa
+   - Campos: first_name, last_name, email, username
+   - Cualquier usuario autenticado (no requiere admin)
+   - Validar unicidad excluyendo el propio ID
+   - Actualizar $_SESSION['name'] si cambia first_name
+   - Invalidar caché users.all
+
+2. changePassword() — Cambiar contraseña
+   - POST /profile/password (sin GET propio — form en la vista de perfil)
+   - Campos: current_password, new_password, confirm_password
+   - password_verify() para verificar la actual
+   - password_hash() para guardar la nueva
+
+[Restricciones]
+- Vista unificada views/profile/index.php con dos <form> independientes,
+  cada uno con su propio _csrf token
+- Controlador ProfileController — guard usa auth(), no admin()
+- $id siempre de $_SESSION['user_id'] — nunca de $_POST/$_GET (IDOR imposible)
+- Métodos nuevos en User.php:
+    updateProfile(int $id, array $data): bool — solo info, sin password/is_admin
+    getPasswordById(int $id): ?string — solo el hash para verificar
+    updatePasswordProfile(int $id, string $new): bool — por id, independiente de
+      updatePassword() que sigue siendo exclusivo del flujo de reset por email
+- Errores de changePassword() redirigen a /profile (misma vista, mismo toast)
+
+[Formato de salida]
+Plan en fases atómicas: 1-Model, 2-Rutas, 3-Controller, 4-Vista, 5-Nav.
+Cada fase: objetivo, archivos, cambios técnicos, criterio de done.
+```
+
+---
+
+_Última actualización: 2026-06-14 — v1.9.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._
