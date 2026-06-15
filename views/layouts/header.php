@@ -50,6 +50,11 @@
                                 <i class="fas fa-users mr-1"></i> Users
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link ml-2" href="<?= APP_URL ?>/activity-logs">
+                                <i class="fas fa-clipboard-list mr-1"></i> Activity Log
+                            </a>
+                        </li>
                     <?php endif; ?>
                 </ul>
                 <ul class="navbar-nav mr-2">
