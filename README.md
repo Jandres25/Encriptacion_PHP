@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.9.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.9.0)
+[![Version](https://img.shields.io/badge/version-1.10.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.10.0)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -29,7 +29,8 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - **HTTP Security Headers** — `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy` and more via `mod_headers` in `.htaccess`; HSTS ready for HTTPS
 - **Secure session cookie** — `session_start_secure()` helper enforces `HttpOnly`, `SameSite=Strict` and conditional `Secure` flag on every session start
 - **Custom error pages** — styled 404, 403 and 500 views matching the app's design; standalone (no DB dependency)
-- **Integration test suite** — 40 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
+- **Audit log** — all security and admin events (logins, logouts, password changes, user CRUD) recorded in `activity_logs`; admin-only view at `/activity-logs` with DataTables
+- **Integration test suite** — 50 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
 - SweetAlert2 toast notifications for all CRUD and authentication actions
 - Per-page asset injection — `$pageStyles` / `$pageScripts` arrays in shared layouts
 - Shared layout system — `header.php` / `footer.php` accept `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`
@@ -79,7 +80,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.9.0
+APP_VERSION=1.10.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -118,6 +119,7 @@ mysql -u root -p < database/seeds.sql
 │   │   ├── config.php         # Loads .env via phpdotenv; defines APP_URL + env()
 │   │   └── database.php       # Database singleton — Database::getConnection()
 │   ├── Controller/
+│   │   ├── ActivityLogController.php # Audit log viewer — GET /activity-logs, admin only
 │   │   ├── AuthController.php    # login, logout, forgotPassword, resetPassword
 │   │   ├── HomeController.php    # Dashboard — applies timeout + auth middleware
 │   │   ├── ProfileController.php # profile(), changePassword() — any authenticated user
@@ -131,12 +133,13 @@ mysql -u root -p < database/seeds.sql
 │   ├── Middleware/
 │   │   └── AuthMiddleware.php  # Static guards: auth(), admin(), timeout()
 │   ├── Model/
+│   │   ├── ActivityLog.php     # Audit log — log(), logTo(), getAll(); event constants
 │   │   ├── LoginAttempt.php    # Account lockout — atomic insert/update, lock check, clear
 │   │   └── User.php            # All DB queries via MySQLi prepared statements
 │   └── Service/
 │       └── MailerService.php   # PHPMailer encapsulation — SMTP via STARTTLS
 ├── database/
-│   ├── schema.sql              # Table definitions (users, password_resets, login_attempts)
+│   ├── schema.sql              # Table definitions (users, password_resets, login_attempts, activity_logs)
 │   ├── schema_test.sql         # Table-only schema for test DB (no CREATE DATABASE)
 │   └── seeds.sql               # Sample data with bcrypt-hashed passwords
 ├── libs/
@@ -145,7 +148,7 @@ mysql -u root -p < database/seeds.sql
 │   ├── css/                    # bootstrap.css, estilo.css, all.min.css, layout-protected.css
 │   ├── DataTables/             # DataTables JS bundle + Bootstrap 4 skin
 │   ├── img/                    # Images and icons
-│   ├── js/                     # jQuery, Bootstrap JS, Popper, SweetAlert2, users-*.js
+│   ├── js/                     # jQuery, Bootstrap JS, Popper, SweetAlert2, users-*.js, activity-logs-table.js
 │   ├── webfonts/               # FontAwesome webfonts
 │   ├── .htaccess               # Apache rewrite rules for clean URLs
 │   └── index.php               # Front controller
@@ -159,13 +162,16 @@ mysql -u root -p < database/seeds.sql
 │   ├── errors/                 # 404.php, 403.php, 500.php + layout.php (standalone, no DB dependency)
 │   ├── home/                   # index.php — dashboard content (wrapped by shared layout)
 │   ├── layouts/                # header.php, footer.php, messages.php
+│   ├── activity-log/           # index.php — audit log table (admin only)
 │   ├── profile/                # index.php — unified profile + change password view
 │   └── user/                   # index, create, edit (wrapped by shared layout)
 ├── tests/
 │   ├── bootstrap.php           # Test bootstrap — loads .env.testing, never starts session
 │   ├── TestCase.php            # Abstract base — DB connection, truncate, createUser()
 │   ├── Unit/
-│   │   └── UserTest.php        # 14 integration tests for App\Model\User
+│   │   ├── ActivityLogTest.php # 10 tests for App\Model\ActivityLog
+│   │   ├── LoginAttemptTest.php # 7 tests for App\Model\LoginAttempt
+│   │   └── UserTest.php        # 14 tests for App\Model\User
 │   └── Integration/
 │       └── AuthTest.php        # 19 integration tests for App\Core\Auth
 ├── .env.example                # Environment variable template
@@ -178,7 +184,7 @@ mysql -u root -p < database/seeds.sql
 1. Open `http://localhost/Encriptacion_PHP/public/` in your browser
 2. Log in with a seeded user (e.g. username `Admin`, password `Admin1234`)
 3. Click your username in the nav to access your **profile** — edit info or change password
-4. Admin users (`is_admin = 1`) see the **Users** link in the nav → full CRUD
+4. Admin users (`is_admin = 1`) see the **Users** and **Activity Log** links in the nav → full CRUD and audit history
 5. To recover a password, click "Forgot your password?" on the login page
 
 ## URL Routing
@@ -198,6 +204,7 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 | `/users/create`             | `UserController::create()`         |
 | `/users/edit?id=X`          | `UserController::edit()`           |
 | `POST /users/delete`        | `UserController::delete()`         |
+| `/activity-logs`            | `ActivityLogController::index()`   |
 
 ## Security
 
@@ -219,6 +226,7 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 - **Admin self-protection** — admins cannot delete their own account or remove their own `is_admin` flag
 - **Account lockout** — 5 consecutive failed logins lock the account for 15 min (configurable); only tracked for existing usernames; lockout cleared on successful login or password reset
 - **Custom error pages** — 404, 403, 500 views are standalone (no DB/session dependency); DB errors logged via `error_log()`, never exposed to the browser
+- **Audit log** — `ActivityLog::log()` wrapped in try/catch so a logging failure never aborts the main flow; IP from `$_SERVER['REMOTE_ADDR']` only; records preserved via FK `ON DELETE SET NULL` when user is deleted
 
 ## Cache
 
@@ -248,7 +256,7 @@ cp .env.testing.example .env.testing   # or create it manually from .env.testing
 composer test
 
 # Run by suite
-composer test:unit         # App\Model\User + App\Model\LoginAttempt — 21 tests
+composer test:unit         # App\Model\User + App\Model\LoginAttempt + App\Model\ActivityLog — 31 tests
 composer test:integration  # App\Core\Auth — 19 tests
 ```
 

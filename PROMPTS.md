@@ -417,5 +417,50 @@ Cada fase: objetivo, archivos, cambios técnicos, criterio de done.
 
 ---
 
-_Última actualización: 2026-06-14 — v1.9.0_
+---
+
+## Ejemplo real — Audit log (implementado en v1.10.0)
+
+> Prompt de feature con modelo estático, helper testeable y vista DataTables.
+
+```
+[Rol]
+Actúa como desarrollador PHP Senior especializado en arquitectura MVC
+y seguridad web (autenticación, hashing, sesiones).
+
+[Contexto]
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: Bootstrap 4, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
+Módulo: audit log (nuevo).
+
+[Tarea]
+Diseña el plan COMPLETO de implementación del módulo de audit log.
+
+Criterios de aceptación:
+- Tabla activity_logs: id, user_id (nullable), event, description, ip_address, created_at
+- Clase App\Model\ActivityLog con log() estático invocable desde cualquier controller
+- Vista /activity-logs solo visible para admins (AuthMiddleware::admin())
+- Tabla con DataTables client-side — misma infraestructura que /users
+- Columnas visibles: fecha, usuario, evento, descripción, IP
+- Esquema simple — sin campos JSON ni extras
+- Tests PHPUnit: log con user, log anónimo, getAll()
+
+[Restricciones]
+- Arquitectura MVC estándar, MySQLi prepared statements siempre
+- ActivityLog::log() llamable sin instanciar (usa Database::getConnection())
+- user_id nullable: eventos de login fallido no tienen usuario autenticado
+- ip_address: $_SERVER['REMOTE_ADDR'] — no X-Forwarded-For
+- NO paginación server-side — DataTables client-side es suficiente
+- Tests: NO mocks de mysqli, NO cargar autoload.php, extender Tests\TestCase, PHPUnit 11 #[Test]
+- El logging nunca debe romper el flujo principal (try/catch + error_log en fallo)
+- Separar logTo(\mysqli $db) como helper privado para inyección en tests sin singleton
+
+[Formato de salida]
+Plan en fases atómicas. Para cada fase: objetivo, archivos, cambios técnicos, criterio de done.
+Al final: tabla de archivos afectados, consideraciones de seguridad, edge cases para tests.
+```
+
+---
+
+_Última actualización: 2026-06-15 — v1.10.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._

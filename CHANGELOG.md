@@ -6,6 +6,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.10.0] — 2026-06-15
+
+### Added
+
+- **Audit log** — registro completo de eventos de seguridad y administración:
+  - Nueva tabla `activity_logs` (`id`, `user_id` nullable con FK `ON DELETE SET NULL`, `event`, `description`, `ip_address`, `created_at`) con índices en `created_at` y `user_id`
+  - `App\Model\ActivityLog` — constantes de evento (`EVENT_LOGIN_SUCCESS`, `EVENT_LOGIN_FAILED`, `EVENT_LOGOUT`, `EVENT_PASSWORD_CHANGED`, `EVENT_PASSWORD_RESET`, `EVENT_USER_CREATED`, `EVENT_USER_UPDATED`, `EVENT_USER_DELETED`); método estático `log()` (usa singleton DB) y helper `logTo(\mysqli)` para inyección en tests; `getAll()` con LEFT JOIN a `users` y `COALESCE` para mostrar "Anónimo" cuando `user_id` es NULL; ordenado por `created_at DESC`; sin caché
+  - `ActivityLogController::index()` — guarda con `AuthMiddleware::timeout()` + `AuthMiddleware::admin()`; solo GET
+  - Ruta `GET /activity-logs` registrada en `routes/web.php`
+  - Vista `views/activity-log/index.php` — tabla Bootstrap con DataTables client-side; badges de color por tipo de evento; `htmlspecialchars()` en todas las celdas
+  - `public/js/activity-logs-table.js` — inicialización DataTables con `order` por fecha descendente y `pageLength: 25`
+  - Enlace "Activity Log" en nav solo visible para admins (`$_SESSION['is_admin']`)
+  - Instrumentación en controllers:
+    - `AuthController`: login exitoso, login fallido (user_id NULL), logout, reset de contraseña por email
+    - `ProfileController`: cambio de contraseña exitoso
+    - `UserController`: crear, editar y eliminar usuario (con username del objetivo en la descripción)
+  - `log()` envuelto en try/catch con `error_log()` — un fallo de auditoría nunca aborta el flujo principal
+  - IP registrada desde `$_SERVER['REMOTE_ADDR']`; nunca X-Forwarded-For
+  - 10 nuevos tests en `tests/Unit/ActivityLogTest.php` — cubre `logTo()` con/sin user_id, IP presente/ausente, caracteres especiales, acumulación de filas, `getAll()` vacío, JOIN con nombre, COALESCE "Anónimo" y orden DESC — **50 tests en total**
+
+---
+
 ## [1.9.0] — 2026-06-14
 
 ### Added
