@@ -54,9 +54,9 @@
                 </ul>
                 <ul class="navbar-nav mr-2">
                     <li class="nav-item">
-                        <span class="nav-link text-secondary">
+                        <a class="nav-link" href="<?= APP_URL ?>/profile">
                             <i class="fas fa-user mr-1"></i> <?= htmlspecialchars($_SESSION['name'] ?? '') ?>
-                        </span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <form method="post" action="<?= APP_URL ?>/logout" class="d-inline">
