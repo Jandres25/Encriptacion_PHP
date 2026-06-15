@@ -24,7 +24,7 @@ class ActivityLogController extends Controller
         $this->render('activity-log/index.php', [
             'pageTitle'     => 'Activity Log — SecureAuth',
             'useDataTables' => true,
-            'pageScripts'   => [APP_URL . '/js/activity-logs-table.js'],
+            'pageScripts'   => ['js/activity-logs-table.js'],
             'logs'          => $this->model->getAll(),
         ], protected: true);
     }
