@@ -34,3 +34,16 @@ CREATE TABLE IF NOT EXISTS `password_resets` (
   `used`       tinyint(1)            DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `activity_logs` (
+  `id`          int(11)      NOT NULL AUTO_INCREMENT,
+  `user_id`     int(11)               NULL DEFAULT NULL,
+  `event`       varchar(50)  NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `ip_address`  varchar(45)           NULL DEFAULT NULL,
+  `created_at`  datetime     NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_activity_logs_created_at` (`created_at`),
+  KEY `idx_activity_logs_user_id`    (`user_id`),
+  CONSTRAINT `fk_activity_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
