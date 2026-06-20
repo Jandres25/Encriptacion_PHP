@@ -17,7 +17,7 @@
                         <th>Username</th>
                         <th>Email</th>
                         <th>Admin</th>
-                        <th class="text-center">Actions</th>
+                        <th class="text-center no-export">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,7 +38,7 @@
                                     <span class="badge badge-secondary badge-pill p-2">No</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="text-center">
+                            <td class="text-center no-export">
                                 <div class="btn-group">
                                     <a class="btn btn-sm btn-outline-success"
                                         href="<?= APP_URL ?>/users/edit?id=<?= $user['id'] ?>" role="button">
