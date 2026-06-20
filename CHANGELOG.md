@@ -6,6 +6,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.11.0] — 2026-06-20
+
+### Added
+
+- **DataTables Buttons + ColVis** — exportación y visibilidad de columnas en `/users` y `/activity-logs`:
+  - Botones agrupados bajo colección "Reports": Copy, PDF, Excel, CSV, Print; selector de columnas "Columns" separado (ColVis)
+  - PDF con `customize`: encabezado bold centrado, subtítulo italic, fecha de generación, footer con paginación por página; colores de paleta del proyecto (`#142e3d`)
+  - Excel con `messageTop`, `messageBottom` y `filename` con fecha ISO
+  - Print con `table-striped` y `font-size: 12px` via `customize`
+  - Clase `no-export` en `<th>` y `<td>` de la columna Actions en `/users` — excluida de todos los exports y del ColVis
+  - Assets self-hosted en `public/DataTables/` (Buttons 2.4.2, compatible con DataTables 1.11.x): `dataTables.buttons.min.js`, `buttons.bootstrap4.min.js`, `buttons.bootstrap4.min.css`, `buttons.html5.min.js`, `buttons.print.min.js`, `buttons.colVis.min.js`, `jszip.min.js`, `pdfmake.min.js`, `vfs_fonts.js`
+  - Carga integrada en el flag `$useDataTables` — `header.php` y `footer.php` cargan todos los assets de Buttons automáticamente cuando `useDataTables: true`; ninguna otra variable de layout introducida
+
+---
+
 ## [1.10.0] — 2026-06-15
 
 ### Added

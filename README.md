@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.10.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.10.0)
+[![Version](https://img.shields.io/badge/version-1.11.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.11.0)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -30,10 +30,11 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - **Secure session cookie** — `session_start_secure()` helper enforces `HttpOnly`, `SameSite=Strict` and conditional `Secure` flag on every session start
 - **Custom error pages** — styled 404, 403 and 500 views matching the app's design; standalone (no DB dependency)
 - **Audit log** — all security and admin events (logins, logouts, password changes, user CRUD) recorded in `activity_logs`; admin-only view at `/activity-logs` with DataTables
+- **DataTables Buttons + ColVis** — export buttons (Copy, PDF, Excel, CSV, Print) and column visibility toggle on `/users` and `/activity-logs`; PDF/Excel with custom title, subtitle, date and footer; Actions column excluded from all exports; assets self-hosted (Buttons 2.4.2)
 - **Integration test suite** — 50 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
 - SweetAlert2 toast notifications for all CRUD and authentication actions
 - Per-page asset injection — `$pageStyles` / `$pageScripts` arrays in shared layouts
-- Shared layout system — `header.php` / `footer.php` accept `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`
+- Shared layout system — `header.php` / `footer.php` accept `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables` (loads DataTables core + Buttons + ColVis when `true`)
 - App version displayed in footer via `APP_VERSION` env var
 
 ## Requirements
@@ -191,20 +192,20 @@ mysql -u root -p < database/seeds.sql
 
 All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 
-| URL                         | Controller method                  |
-| --------------------------- | ---------------------------------- |
-| `/`                         | `HomeController::index()`          |
-| `/login`                    | `AuthController::login()`          |
-| `POST /logout`              | `AuthController::logout()`         |
-| `/forgot-password`          | `AuthController::forgotPassword()` |
-| `/reset-password?token=...` | `AuthController::resetPassword()`  |
-| `/profile`                  | `ProfileController::profile()`     |
+| URL                         | Controller method                     |
+| --------------------------- | ------------------------------------- |
+| `/`                         | `HomeController::index()`             |
+| `/login`                    | `AuthController::login()`             |
+| `POST /logout`              | `AuthController::logout()`            |
+| `/forgot-password`          | `AuthController::forgotPassword()`    |
+| `/reset-password?token=...` | `AuthController::resetPassword()`     |
+| `/profile`                  | `ProfileController::profile()`        |
 | `POST /profile/password`    | `ProfileController::changePassword()` |
-| `/users`                    | `UserController::index()`          |
-| `/users/create`             | `UserController::create()`         |
-| `/users/edit?id=X`          | `UserController::edit()`           |
-| `POST /users/delete`        | `UserController::delete()`         |
-| `/activity-logs`            | `ActivityLogController::index()`   |
+| `/users`                    | `UserController::index()`             |
+| `/users/create`             | `UserController::create()`            |
+| `/users/edit?id=X`          | `UserController::edit()`              |
+| `POST /users/delete`        | `UserController::delete()`            |
+| `/activity-logs`            | `ActivityLogController::index()`      |
 
 ## Security
 

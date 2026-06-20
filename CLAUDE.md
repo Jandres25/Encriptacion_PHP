@@ -193,7 +193,12 @@ Use only `public/css/all.min.css` (CSS + webfonts in `public/webfonts/`). The JS
 
 ### DataTables
 
-Loaded **only** on `views/user/index.php` via `$useDataTables = true` (CSS in header) and the DataTables JS bundle in footer. App-specific scripts (`users-table.js`, `users-delete.js`) are passed via `$pageScripts` in `UserController::index()`.
+Loaded **only** on pages that set `$useDataTables = true`. The flag loads the full bundle in `header.php` (CSS) and `footer.php` (JS) — DataTables core + Buttons 2.4.2 + ColVis. App-specific init scripts are passed via `$pageScripts`.
+
+- `/users` — `users-table.js` (Buttons collection: Copy, PDF, Excel, CSV, Print + ColVis; `no-export` class excludes the Actions column) + `users-delete.js`
+- `/activity-logs` — `activity-logs-table.js` (same Buttons collection; all columns exported)
+- PDF exports use `customize` with project palette (`#142e3d` header), title, subtitle, date and per-page footer
+- **Never add new per-page Buttons assets via `$pageScripts`** — they are already bundled inside the `$useDataTables` block in `footer.php`
 
 ### Per-page assets in layouts
 
@@ -201,7 +206,7 @@ Loaded **only** on `views/user/index.php` via `$useDataTables = true` (CSS in he
 
 - `$pageStyles` — array of CSS paths (relative to `APP_URL`) injected in `<head>` after DataTables CSS
 - `$pageScripts` — array of JS paths (relative to `APP_URL`) injected in footer after DataTables JS
-- `$useDataTables` — bool (default `false`) — enables DataTables CSS + JS bundle
+- `$useDataTables` — bool (default `false`) — enables DataTables CSS + JS bundle (core + Buttons 2.4.2 + ColVis); no additional variables needed for export buttons
 - `$pageTitle` — string (default `'SecureAuth'`) — browser tab title
 - `$favicon` — filename in `public/img/` (default `'usuario.png'`)
 - `$bodyClass` — string added to `<body class="...">` (e.g. `'dashboard'`); also suppresses `mt-3` on `<main>`

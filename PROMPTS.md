@@ -462,5 +462,60 @@ Al final: tabla de archivos afectados, consideraciones de seguridad, edge cases 
 
 ---
 
-_Última actualización: 2026-06-15 — v1.10.0_
+---
+
+## Ejemplo real — DataTables Buttons + ColVis (implementado en v1.11.0)
+
+> Prompt de feature de exportación con assets self-hosted y configuración por flag de layout.
+
+```
+[Rol]
+Actúa como desarrollador PHP Senior especializado en arquitectura MVC
+y seguridad web (autenticación, hashing, sesiones).
+
+[Contexto]
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: Bootstrap 4, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
+Módulo activo: DataTables — exportación y visibilidad de columnas
+
+Archivos relevantes:
+- views/layouts/header.php               ← <head> compartido; soporta $useDataTables, $pageStyles
+- views/layouts/footer.php               ← footer compartido; soporta $useDataTables, $pageScripts
+- app/Controller/UserController.php      ← pasa useDataTables:true + pageScripts a render()
+- app/Controller/ActivityLogController.php ← pasa useDataTables:true + pageScripts a render()
+- views/user/index.php                   ← tabla Bootstrap con DataTables
+- views/activity-log/index.php           ← tabla Bootstrap con DataTables
+- public/js/users-table.js               ← inicialización DataTables para /users
+- public/js/activity-logs-table.js       ← inicialización DataTables para /activity-logs
+- public/DataTables/                     ← assets self-hosted de DataTables ya existentes
+
+[Tarea]
+Agregar botones de exportación (Copy, CSV, Excel, PDF, Print) y selector de columnas (ColVis)
+a las dos tablas existentes: /users y /activity-logs.
+
+Criterios de aceptación:
+- Botones agrupados en colección "Reports"; ColVis separado con texto "Columns"
+- PDF con customize: título bold centrado, subtítulo italic, fecha de generación, footer por página
+- Excel con messageTop, messageBottom y filename con fecha ISO
+- Print con table-striped y font-size vía customize
+- Columna Actions de /users excluida de todos los exports y del ColVis (clase no-export)
+- Assets self-hosted en public/DataTables/ — nunca CDN externo
+- Carga integrada en el flag $useDataTables existente — header.php y footer.php manejan los assets automáticamente
+
+[Restricciones]
+- NO introducir nuevas variables de layout — extender el bloque $useDataTables en header/footer
+- Assets via APP_URL — nunca rutas relativas
+- Orden de carga JS: dataTables.buttons → buttons.bootstrap4 → jszip → pdfmake → vfs_fonts
+  → buttons.html5 → buttons.print → buttons.colVis → init JS de la página
+- Versión Buttons 2.4.2 (compatible con DataTables 1.11.x — NO usar 3.x)
+- No agregar comentarios obvios — solo donde el WHY no sea evidente
+
+[Formato de salida]
+Plan en fases atómicas. Para cada fase: objetivo, archivos, cambios técnicos, criterio de done.
+Al final: orden de carga JS, edge cases a verificar manualmente.
+```
+
+---
+
+_Última actualización: 2026-06-20 — v1.11.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._
