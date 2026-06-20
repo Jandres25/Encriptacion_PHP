@@ -14,6 +14,7 @@
     <?php if ($useDataTables ?? false): ?>
         <link href="<?= APP_URL ?>/DataTables/dataTables.bootstrap4.min.css" rel="stylesheet">
         <link href="<?= APP_URL ?>/DataTables/responsive.bootstrap4.min.css" rel="stylesheet">
+        <link href="<?= APP_URL ?>/DataTables/buttons.bootstrap4.min.css" rel="stylesheet">
     <?php endif; ?>
     <?php foreach ($pageStyles ?? [] as $style): ?>
         <link rel="stylesheet" href="<?= APP_URL . '/' . ltrim($style, '/') ?>">
