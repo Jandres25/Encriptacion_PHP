@@ -24,7 +24,18 @@ class ActivityLogController extends Controller
         $this->render('activity-log/index.php', [
             'pageTitle'     => 'Activity Log — SecureAuth',
             'useDataTables' => true,
-            'pageScripts'   => ['js/activity-logs-table.js'],
+            'pageStyles'    => ['DataTables/buttons.bootstrap4.min.css'],
+            'pageScripts'   => [
+                'DataTables/dataTables.buttons.min.js',
+                'DataTables/buttons.bootstrap4.min.js',
+                'DataTables/jszip.min.js',
+                'DataTables/pdfmake.min.js',
+                'DataTables/vfs_fonts.js',
+                'DataTables/buttons.html5.min.js',
+                'DataTables/buttons.print.min.js',
+                'DataTables/buttons.colVis.min.js',
+                'js/activity-logs-table.js',
+            ],
             'logs'          => $this->model->getAll(),
         ], protected: true);
     }
