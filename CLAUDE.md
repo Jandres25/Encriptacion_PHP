@@ -47,7 +47,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.10.0
+APP_VERSION=1.12.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -115,21 +115,21 @@ Browser → public/index.php → App\Core\Router → Controller::method()
 | `app/Core/Controller.php`                  | Abstract base — `render(string $view, array $data, bool $protected)` and `redirect(string $path)`                                                                                       |
 | `app/Core/Model.php`                       | Abstract base — holds `protected \mysqli $db`                                                                                                                                           |
 | `app/Core/Auth.php`                        | `App\Core\Auth` — credential verify, remember-me token issue/consume/clear, password reset tokens (stored as SHA-256 hash), `restoreFromCookie()`, lockout methods                      |
-| `app/Model/LoginAttempt.php`               | `App\Model\LoginAttempt` — atomic `registerFailure()` via `INSERT ... ON DUPLICATE KEY UPDATE`, `lockedSecondsRemaining()`, `clear()`; `identifier` is the PK (no surrogate id)         |
+| `app/Model/LoginAttempt.php`               | `App\Model\LoginAttempt` — atomic `registerFailure()` via `INSERT ... ON DUPLICATE KEY UPDATE`, `lockedSecondsRemaining()`, `clear()`, `getLockedCount(): int`; `identifier` is the PK (no surrogate id) |
 | `app/Core/Csrf.php`                        | `App\Core\Csrf` — `token()` generates/returns session CSRF token; `verify()` validates `$_POST['_csrf']` with `hash_equals()`                                                           |
 | `app/Middleware/AuthMiddleware.php`        | Static guards: `auth()`, `admin()`, `timeout(\mysqli)`                                                                                                                                  |
 | `app/Controller/AuthController.php`        | All auth logic: login, logout, forgotPassword, resetPassword                                                                                                                            |
-| `app/Controller/HomeController.php`        | Dashboard: applies timeout + auth middleware, renders home view                                                                                                                         |
+| `app/Controller/HomeController.php`        | Dashboard: applies timeout + auth middleware, instancia `User`/`ActivityLog`/`LoginAttempt` para pasar métricas reales a la vista                                                       |
 | `app/Controller/ProfileController.php`     | User profile: `profile()` (edit info) and `changePassword()` — any authenticated user; `$id` always from `$_SESSION['user_id']`                                                         |
 | `app/Controller/UserController.php`        | Full user CRUD — guarded by `admin()` middleware                                                                                                                                        |
 | `app/Controller/ActivityLogController.php` | Audit log viewer — GET `/activity-logs`, guarded by `admin()` middleware                                                                                                                |
-| `app/Model/User.php`                       | `App\Model\User` — all DB queries via MySQLi prepared statements; `updateProfile()` (info only, no password/is_admin), `getPasswordById()`, `updatePasswordProfile()` (by id)           |
-| `app/Model/ActivityLog.php`                | `App\Model\ActivityLog` — `log()` static (singleton DB), `logTo(\mysqli)` (test-injectable), `getAll()` (LEFT JOIN users, ORDER BY created_at DESC); event constants                    |
+| `app/Model/User.php`                       | `App\Model\User` — all DB queries via MySQLi prepared statements; `updateProfile()` (info only, no password/is_admin), `getPasswordById()`, `updatePasswordProfile()` (by id), `getTotalCount(): int` |
+| `app/Model/ActivityLog.php`                | `App\Model\ActivityLog` — `log()` static (singleton DB), `logTo(\mysqli)` (test-injectable), `getAll()` (LEFT JOIN users, ORDER BY created_at DESC), `getCountTodayByEvent(string): int`, `getRecentEvents(int=5): array`; event constants |
 | `app/Service/MailerService.php`            | PHPMailer encapsulation — SMTP via STARTTLS                                                                                                                                             |
 | `views/layouts/header.php`                 | Shared `<head>` + nav for all protected pages; accepts `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables`, `$pageStyles`                                                          |
 | `views/layouts/footer.php`                 | Shared footer with version; accepts `$useDataTables`, `$pageScripts`                                                                                                                    |
 | `views/layouts/messages.php`               | Centralized SweetAlert2 toast notification logic                                                                                                                                        |
-| `views/home/index.php`                     | Dashboard content only (hero + feature cards) — wrapped by shared layout via `protected: true`                                                                                          |
+| `views/home/index.php`                     | Dashboard — hero + 4 stat-cards (usuarios totales, logins hoy, fallos hoy, cuentas bloqueadas) + tabla Bootstrap de últimos 5 eventos del audit log; sin DataTables; wrapped by shared layout via `protected: true` |
 | `views/auth/`                              | Standalone auth views (login, forgot-password, reset-password) — include their own `<head>`; assets self-hosted (no external CDN)                                                       |
 | `views/profile/index.php`                  | Unified profile view — two independent forms: edit info (`POST /profile`) and change password (`POST /profile/password`); each with its own `_csrf` token                               |
 | `views/activity-log/index.php`             | Audit log view — Bootstrap table with DataTables client-side; badges per event type; `htmlspecialchars()` on all cells; wrapped by shared layout                                        |
@@ -297,7 +297,7 @@ composer test:integration  # Auth class only
 - PHPMailer is loaded via Composer autoload (`phpmailer/phpmailer`)
 - All asset paths use the `APP_URL` constant via `<?= APP_URL ?>` short-tag syntax
 - `App\Config\Database::getConnection()` is a singleton — the same `\mysqli` instance is reused across all controllers and models within a request
-- `views/home/index.php` contains only content markup (no `<html>`/`<head>`/`<body>`) — it is wrapped by the shared layout via `Controller::render(..., protected: true)`
+- `views/home/index.php` contains only content markup (no `<html>`/`<head>`/`<body>`) — dashboard with 4 stat-cards and a recent-events table; wrapped by the shared layout via `Controller::render(..., protected: true)`
 - Error/success messages use unified session flash: `$_SESSION['message']` and `$_SESSION['icon']`. Rendered via `views/layouts/messages.php`. Never pass them via URL query params
 - Auth views use `<button type="submit">` (not `<input type="submit">`); POST detection uses `isset($_POST['btnXXX'])` — not `!empty()` — since `<button>` without a `value` attribute submits an empty string
 - User delete flow uses `.js-delete-user` buttons with `data-delete-url`, `data-name`, `data-username`; confirmation handled in `public/js/users-delete.js`

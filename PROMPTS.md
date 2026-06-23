@@ -517,5 +517,62 @@ Al final: orden de carga JS, edge cases a verificar manualmente.
 
 ---
 
-_Última actualización: 2026-06-20 — v1.11.0_
+---
+
+## Ejemplo real — Dashboard con métricas (implementado en v1.12.0)
+
+> Prompt de feature que agrega queries de agregación a modelos existentes y rediseña la vista home.
+
+```
+[Rol]
+Actúa como desarrollador PHP Senior especializado en arquitectura MVC
+y seguridad web (autenticación, hashing, sesiones).
+
+[Contexto]
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: Bootstrap 4, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
+Módulo activo: home (dashboard)
+
+Archivos relevantes:
+- app/Controller/HomeController.php           ← renderiza views/home/index.php con protected:true
+- app/Model/User.php                          ← queries con prepared statements; getAll(), create(), etc.
+- app/Model/ActivityLog.php                   ← log() estático, logTo(), getAll() con LEFT JOIN users
+- app/Model/LoginAttempt.php                  ← registerFailure(), lockedSecondsRemaining(), clear()
+- views/home/index.php                        ← contenido del dashboard (sin <html>)
+- public/css/estilo.css                       ← variables CSS: --color-accent #04a1fc, --color-dark #142e3d
+
+[Tarea]
+Diseña el plan COMPLETO de implementación del dashboard con métricas reales para la home.
+
+Criterios de aceptación:
+- Reemplazar las feature cards genéricas con 4 stat-cards de datos reales:
+  1. Total de usuarios registrados (COUNT en users)
+  2. Logins exitosos hoy (activity_logs WHERE event = EVENT_LOGIN_SUCCESS AND DATE(created_at) = CURDATE())
+  3. Intentos fallidos hoy (activity_logs WHERE event = EVENT_LOGIN_FAILED AND DATE(created_at) = CURDATE())
+  4. Cuentas bloqueadas ahora (login_attempts WHERE locked_until > NOW())
+- Tabla de últimos 5 eventos del audit log (LEFT JOIN users, ORDER BY created_at DESC LIMIT 5)
+- "Anónimo" para eventos sin user_id; enlace "Ver todo" visible solo a admins
+
+Métodos nuevos:
+- User::getTotalCount(): int
+- ActivityLog::getCountTodayByEvent(string $event): int
+- ActivityLog::getRecentEvents(int $limit = 5): array
+- LoginAttempt::getLockedCount(): int
+
+[Restricciones]
+- MySQLi prepared statements siempre; sin interpolación en SQL
+- Guards: AuthMiddleware::timeout() + AuthMiddleware::auth() al inicio de HomeController::index()
+- NO DataTables en el dashboard — tabla simple Bootstrap
+- htmlspecialchars() en todos los outputs de BD; contadores como (int)
+- CURDATE() / NOW() calculados en MySQL — sin drift PHP/MySQL
+- No introducir librerías nuevas
+
+[Formato de salida]
+Plan en fases atómicas. Para cada fase: objetivo, archivos, cambios técnicos, criterio de done.
+Al final: queries SQL finales, consideraciones de seguridad, checklist de testing.
+```
+
+---
+
+_Última actualización: 2026-06-23 — v1.12.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._

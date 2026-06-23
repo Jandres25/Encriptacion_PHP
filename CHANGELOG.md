@@ -6,6 +6,27 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.12.0] — 2026-06-23
+
+### Added
+
+- **Dashboard con métricas reales** — home reemplaza las feature cards genéricas con datos en vivo:
+  - 4 stat-cards: usuarios totales (`User::getTotalCount()`), logins exitosos hoy (`ActivityLog::getCountTodayByEvent(EVENT_LOGIN_SUCCESS)`), intentos fallidos hoy (`getCountTodayByEvent(EVENT_LOGIN_FAILED)`), cuentas bloqueadas ahora (`LoginAttempt::getLockedCount()`)
+  - Tabla Bootstrap de los últimos 5 eventos del audit log (`ActivityLog::getRecentEvents(5)`) con LEFT JOIN a `users`; usuario sin registro muestra "Anónimo"; enlace "Ver todo" a `/activity-logs` visible solo para admins
+  - Sin DataTables — tabla simple Bootstrap para mantener la home ligera
+  - Todos los outputs de BD escapados con `htmlspecialchars()`; contadores emitidos como `(int)` sin escape innecesario
+  - Fechas calculadas en MySQL (`CURDATE()`, `NOW()`) — sin drift PHP/MySQL
+
+### Changed
+
+- `app/Model/User.php` — nuevo método `getTotalCount(): int`
+- `app/Model/ActivityLog.php` — nuevos métodos `getCountTodayByEvent(string $event): int` y `getRecentEvents(int $limit = 5): array`
+- `app/Model/LoginAttempt.php` — nuevo método `getLockedCount(): int`
+- `app/Controller/HomeController.php` — instancia los tres modelos y pasa las 5 variables de métricas a la vista
+- `views/home/index.php` — rediseñada de feature cards estáticas a dashboard con stat-cards + tabla de actividad reciente
+
+---
+
 ## [1.11.0] — 2026-06-20
 
 ### Added

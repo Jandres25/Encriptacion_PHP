@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.11.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.11.0)
+[![Version](https://img.shields.io/badge/version-1.12.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.12.0)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -30,6 +30,7 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - **Secure session cookie** — `session_start_secure()` helper enforces `HttpOnly`, `SameSite=Strict` and conditional `Secure` flag on every session start
 - **Custom error pages** — styled 404, 403 and 500 views matching the app's design; standalone (no DB dependency)
 - **Audit log** — all security and admin events (logins, logouts, password changes, user CRUD) recorded in `activity_logs`; admin-only view at `/activity-logs` with DataTables
+- **Dashboard with real metrics** — home page shows 4 live stat-cards (total users, successful logins today, failed logins today, locked accounts) and a Bootstrap table of the 5 most recent audit events; queries via `User::getTotalCount()`, `ActivityLog::getCountTodayByEvent()`, `ActivityLog::getRecentEvents()`, `LoginAttempt::getLockedCount()`
 - **DataTables Buttons + ColVis** — export buttons (Copy, PDF, Excel, CSV, Print) and column visibility toggle on `/users` and `/activity-logs`; PDF/Excel with custom title, subtitle, date and footer; Actions column excluded from all exports; assets self-hosted (Buttons 2.4.2)
 - **Integration test suite** — 50 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
 - SweetAlert2 toast notifications for all CRUD and authentication actions
@@ -81,7 +82,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.10.0
+APP_VERSION=1.12.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
