@@ -42,6 +42,41 @@ class ActivityLog extends Model
         }
     }
 
+    public function getCountTodayByEvent(string $event): int
+    {
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*) AS total
+             FROM activity_logs
+             WHERE event = ? AND DATE(created_at) = CURDATE()"
+        );
+        $stmt->bind_param('s', $event);
+        $stmt->execute();
+        $total = (int) $stmt->get_result()->fetch_assoc()['total'];
+        $stmt->close();
+        return $total;
+    }
+
+    public function getRecentEvents(int $limit = 5): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT al.id, al.created_at, al.event, al.description, al.ip_address,
+                    COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Anónimo') AS user_name
+             FROM activity_logs al
+             LEFT JOIN users u ON u.id = al.user_id
+             ORDER BY al.created_at DESC
+             LIMIT ?"
+        );
+        $stmt->bind_param('i', $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $events = [];
+        while ($row = $result->fetch_assoc()) {
+            $events[] = $row;
+        }
+        $stmt->close();
+        return $events;
+    }
+
     public function getAll(): array
     {
         $result = $this->db->query(

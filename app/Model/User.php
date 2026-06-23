@@ -212,6 +212,12 @@ class User extends Model
         return $success;
     }
 
+    public function getTotalCount(): int
+    {
+        $result = $this->db->query("SELECT COUNT(*) AS total FROM users");
+        return (int) $result->fetch_assoc()['total'];
+    }
+
     public function updatePassword(string $email, string $newPassword): bool
     {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);

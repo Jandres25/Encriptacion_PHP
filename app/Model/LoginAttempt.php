@@ -44,6 +44,16 @@ class LoginAttempt extends Model
         $stmt->close();
     }
 
+    public function getLockedCount(): int
+    {
+        $result = $this->db->query(
+            "SELECT COUNT(*) AS total
+             FROM login_attempts
+             WHERE locked_until IS NOT NULL AND locked_until > NOW()"
+        );
+        return (int) $result->fetch_assoc()['total'];
+    }
+
     public function clear(string $identifier): void
     {
         $id   = $this->normalize($identifier);
