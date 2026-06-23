@@ -17,52 +17,109 @@
     </div>
 </section>
 
-<!-- Feature cards -->
+<!-- Stat cards -->
 <section class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4 mb-4">
+    <div class="row">
+        <div class="col-md-3 mb-4">
             <div class="card h-100 shadow-sm text-center">
                 <div class="card-body py-4">
-                    <div class="feature-icon text-white mx-auto" style="background-color: var(--color-dark);">
-                        <i class="fas fa-sitemap"></i>
+                    <div class="feature-icon text-white mx-auto mb-3" style="background-color: var(--color-dark);">
+                        <i class="fas fa-users"></i>
                     </div>
-                    <h5 class="card-title font-weight-bold">MVC Architecture</h5>
-                    <p class="card-text text-muted">
-                        PSR-4 autoloading via Composer with a custom <code>Router</code>,
-                        abstract <code>Controller</code> and <code>Model</code> base classes,
-                        and dedicated <code>Middleware</code> for auth and session guards.
-                    </p>
+                    <h2 class="font-weight-bold mb-1"><?= (int) $totalUsers ?></h2>
+                    <p class="text-muted mb-0">Usuarios registrados</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
+        <div class="col-md-3 mb-4">
             <div class="card h-100 shadow-sm text-center">
                 <div class="card-body py-4">
-                    <div class="feature-icon text-white mx-auto" style="background-color: var(--color-dark);">
+                    <div class="feature-icon text-white mx-auto mb-3" style="background-color: #28a745;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 class="font-weight-bold text-success mb-1"><?= (int) $loginsToday ?></h2>
+                    <p class="text-muted mb-0">Logins exitosos hoy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm text-center">
+                <div class="card-body py-4">
+                    <div class="feature-icon text-white mx-auto mb-3" style="background-color: #ffc107;">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <h2 class="font-weight-bold text-warning mb-1"><?= (int) $failedToday ?></h2>
+                    <p class="text-muted mb-0">Intentos fallidos hoy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm text-center">
+                <div class="card-body py-4">
+                    <div class="feature-icon text-white mx-auto mb-3" style="background-color: #dc3545;">
                         <i class="fas fa-lock"></i>
                     </div>
-                    <h5 class="card-title font-weight-bold">Secure Authentication</h5>
-                    <p class="card-text text-muted">
-                        Bcrypt password hashing, persistent login via remember-me cookie,
-                        automatic session timeout on inactivity, and token-based
-                        password recovery sent by email via PHPMailer.
-                    </p>
+                    <h2 class="font-weight-bold text-danger mb-1"><?= (int) $lockedNow ?></h2>
+                    <p class="text-muted mb-0">Cuentas bloqueadas</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm text-center">
-                <div class="card-body py-4">
-                    <div class="feature-icon text-white mx-auto" style="background-color: var(--color-dark);">
-                        <i class="fas fa-users-cog"></i>
-                    </div>
-                    <h5 class="card-title font-weight-bold">User Management</h5>
-                    <p class="card-text text-muted">
-                        Full admin CRUD with role-based access control, MySQLi prepared
-                        statements, and a file-based cache for the users listing
-                        with automatic invalidation on writes.
-                    </p>
-                </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div class="card shadow-sm mt-2">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: var(--color-dark); color: #fff;">
+            <span><i class="fas fa-clock mr-2"></i>Actividad reciente</span>
+            <?php if ($isAdmin): ?>
+                <a href="<?= APP_URL ?>/activity-logs" class="btn btn-sm btn-app-primary">Ver todo</a>
+            <?php endif; ?>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Evento</th>
+                            <th>Descripción</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($recentEvents)): ?>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Sin actividad registrada</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($recentEvents as $event): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($event['created_at']) ?></td>
+                                    <td><?= htmlspecialchars($event['user_name']) ?></td>
+                                    <td>
+                                        <?php
+                                        $badgeClass = match ($event['event']) {
+                                            'login_success'  => 'badge-success',
+                                            'login_failed'   => 'badge-warning',
+                                            'logout'         => 'badge-secondary',
+                                            'user_created'   => 'badge-primary',
+                                            'user_updated'   => 'badge-info',
+                                            'user_deleted'   => 'badge-danger',
+                                            'password_changed' => 'badge-dark',
+                                            default          => 'badge-light',
+                                        };
+                                        ?>
+                                        <span class="badge <?= $badgeClass ?>">
+                                            <?= htmlspecialchars($event['event']) ?>
+                                        </span>
+                                    </td>
+                                    <td><?= htmlspecialchars($event['description']) ?></td>
+                                    <td><?= $event['ip_address'] !== null ? htmlspecialchars($event['ip_address']) : '—' ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
