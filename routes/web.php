@@ -22,7 +22,8 @@ $router->get('/profile',           [ProfileController::class, 'profile']);
 $router->post('/profile',          [ProfileController::class, 'profile']);
 $router->post('/profile/password', [ProfileController::class, 'changePassword']);
 
-$router->get('/activity-logs',    [ActivityLogController::class, 'index']);
+$router->get('/activity-logs/data', [ActivityLogController::class, 'data']);
+$router->get('/activity-logs',      [ActivityLogController::class, 'index']);
 
 $router->get('/users',            [UserController::class,  'index']);
 $router->get('/users/create',     [UserController::class,  'create']);
