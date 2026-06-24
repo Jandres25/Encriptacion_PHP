@@ -77,20 +77,102 @@ class ActivityLog extends Model
         return $events;
     }
 
-    public function getAll(): array
+    public function getAll(array $filters = [], ?int $limit = null, ?int $offset = null): array
     {
-        $result = $this->db->query(
-            "SELECT al.id, al.created_at, al.event, al.description, al.ip_address,
-                    COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Anónimo') AS user_name
-             FROM activity_logs al
-             LEFT JOIN users u ON u.id = al.user_id
-             ORDER BY al.created_at DESC"
-        );
+        $where = $this->buildWhere($filters);
 
-        $logs = [];
+        $sql = "SELECT al.id, al.created_at, al.event, al.description, al.ip_address,
+                       COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Anónimo') AS user_name
+                FROM activity_logs al
+                LEFT JOIN users u ON u.id = al.user_id
+                {$where['sql']}
+                ORDER BY al.created_at DESC";
+
+        $types  = $where['types'];
+        $params = $where['params'];
+
+        if ($limit !== null) {
+            $sql     .= " LIMIT ? OFFSET ?";
+            $types   .= 'ii';
+            $params[] = $limit;
+            $params[] = $offset ?? 0;
+        }
+
+        if ($types === '') {
+            $result = $this->db->query($sql);
+            $logs   = [];
+            while ($row = $result->fetch_assoc()) {
+                $logs[] = $row;
+            }
+            return $logs;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $logs   = [];
         while ($row = $result->fetch_assoc()) {
             $logs[] = $row;
         }
+        $stmt->close();
         return $logs;
+    }
+
+    public function getTotalCount(array $filters = []): int
+    {
+        $where = $this->buildWhere($filters);
+
+        $sql = "SELECT COUNT(*) AS total
+                FROM activity_logs al
+                LEFT JOIN users u ON u.id = al.user_id
+                {$where['sql']}";
+
+        if ($where['types'] === '') {
+            $result = $this->db->query($sql);
+            return (int) $result->fetch_assoc()['total'];
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param($where['types'], ...$where['params']);
+        $stmt->execute();
+        $total = (int) $stmt->get_result()->fetch_assoc()['total'];
+        $stmt->close();
+        return $total;
+    }
+
+    private function buildWhere(array $filters): array
+    {
+        $clauses = [];
+        $types   = '';
+        $params  = [];
+
+        if (!empty($filters['event'])) {
+            $clauses[] = 'al.event = ?';
+            $types    .= 's';
+            $params[]  = $filters['event'];
+        }
+
+        if (!empty($filters['username'])) {
+            $clauses[] = 'u.username LIKE ?';
+            $types    .= 's';
+            $params[]  = '%' . $filters['username'] . '%';
+        }
+
+        if (!empty($filters['date_from'])) {
+            $clauses[] = 'al.created_at >= ?';
+            $types    .= 's';
+            $params[]  = $filters['date_from'] . ' 00:00:00';
+        }
+
+        if (!empty($filters['date_to'])) {
+            $clauses[] = 'al.created_at <= ?';
+            $types    .= 's';
+            $params[]  = $filters['date_to'] . ' 23:59:59';
+        }
+
+        $sql = $clauses ? 'WHERE ' . implode(' AND ', $clauses) : '';
+
+        return ['sql' => $sql, 'types' => $types, 'params' => $params];
     }
 }
