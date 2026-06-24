@@ -6,6 +6,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Note: Entries before `1.3.1` may reference legacy paths (`config/`, `controllers/`, `model/`) that were moved to `app/Config/`, `app/Controller/`, and `app/Model/`.
 
+## [1.13.0] — 2026-06-24
+
+### Added
+
+- **Filtros server-side en Audit Log** — `/activity-logs` ahora usa DataTables server-side processing con filtros por evento, usuario y rango de fechas:
+  - Nuevo endpoint `GET /activity-logs/data` que devuelve JSON para DataTables (protocolo `draw` / `recordsTotal` / `recordsFiltered` / `data`)
+  - Formulario de filtros colapsable (Bootstrap collapse) sobre la tabla: select de evento, input de username (match parcial), inputs `date_from` / `date_to`; badge warning en el toggle cuando hay filtros activos
+  - DataTables reconfigured to `serverSide: true` — la tabla empieza vacía y carga datos vía AJAX; `searching: false` desactiva el input nativo de DT (reemplazado por el formulario propio)
+  - Botones de export (Copy, PDF, Excel, CSV, Print) y ColVis conservados; exportan la página visible (comportamiento esperado con server-side processing)
+  - Seguridad: `event` validado con allow-list de constantes `EVENT_*`; fechas validadas estrictamente con `DateTime::createFromFormat`; `username` con `trim()` + cap de 100 caracteres; `length` restringido a `[10, 25, 50, 100]`; XSS en JSON mitigado con `htmlspecialchars()` por celda
+  - 8 nuevos tests en `tests/Unit/ActivityLogTest.php` — filtro por evento, match parcial de username, rango de fechas, LIMIT/OFFSET, `getTotalCount()` con y sin filtros, combinación AND; **58 tests en total**
+
+### Changed
+
+- `app/Model/ActivityLog.php` — `getAll()` reescrito con prepared statements y WHERE dinámico; nueva firma `getAll(array $filters = [], ?int $limit = null, ?int $offset = null): array`; nuevo método `getTotalCount(array $filters = []): int`; método privado `buildWhere(array $filters): array`
+- `app/Controller/ActivityLogController.php` — nuevo método `data(): void` (endpoint JSON); método privado `sanitizeFilters(array $input): array`; `index()` sin cambios de lógica
+- `routes/web.php` — nueva ruta `GET /activity-logs/data` registrada antes de `/activity-logs`
+- `views/activity-log/index.php` — `<tbody>` vacío (DataTables llena vía AJAX); formulario de filtros colapsable añadido; `$hasActiveFilters` badge en toggle
+- `public/js/activity-logs-table.js` — migrado a `serverSide: true`; `ajax.data` callback pasa los valores del formulario; botón "Filtrar" llama `ajax.reload()`
+
+---
+
 ## [1.12.0] — 2026-06-23
 
 ### Added

@@ -574,5 +574,65 @@ Al final: queries SQL finales, consideraciones de seguridad, checklist de testin
 
 ---
 
-_Última actualización: 2026-06-23 — v1.12.0_
+---
+
+## Ejemplo real — Filtros server-side en Audit Log (implementado en v1.13.0)
+
+> Prompt de feature con DataTables server-side processing, endpoint JSON y formulario de filtros colapsable.
+
+```
+[Rol]
+Actúa como desarrollador PHP Senior especializado en arquitectura MVC
+y seguridad web (autenticación, hashing, sesiones).
+
+[Contexto]
+Proyecto: Encriptacion_PHP — PHP MVC con Composer (sin framework).
+Stack: Bootstrap 4, DataTables, SweetAlert2, FontAwesome, MySQL/MariaDB, PHPMailer.
+Módulo activo: activity-log (audit log existente)
+
+Archivos relevantes:
+- app/Controller/ActivityLogController.php    ← index() con guard admin + render
+- app/Model/ActivityLog.php                   ← getAll() client-side, constantes EVENT_*
+- views/activity-log/index.php                ← tabla con DataTables client-side
+- public/js/activity-logs-table.js            ← init DataTables para /activity-logs
+- routes/web.php                              ← ruta GET /activity-logs
+
+[Tarea]
+Diseña el plan COMPLETO para migrar /activity-logs a DataTables server-side processing
+con filtros por evento, usuario y rango de fechas.
+
+Criterios de aceptación:
+- Nuevo endpoint GET /activity-logs/data que devuelve JSON DataTables
+  (draw, recordsTotal, recordsFiltered, data)
+- Formulario de filtros colapsable (Bootstrap collapse): select evento, input username
+  (match parcial), inputs date_from/date_to; badge warning cuando hay filtros activos
+- DataTables serverSide:true; searching:false (el formulario propio reemplaza la búsqueda nativa)
+- Botones export (Copy, PDF, Excel, CSV, Print) y ColVis conservados; exportan página visible
+- Paginación manejada por DataTables; servidor provee solo la página actual
+
+Métodos nuevos:
+- ActivityLog::getAll(array $filters=[], ?int $limit=null, ?int $offset=null): array
+- ActivityLog::getTotalCount(array $filters=[]): int
+
+[Restricciones]
+- Sin concatenación de strings en SQL — prepared statements + WHERE dinámico via buildWhere()
+- event: allow-list de constantes EVENT_* — valores arbitrarios descartados
+- Fechas: DateTime::createFromFormat('Y-m-d') + format() === input (validación estricta)
+- username: trim() + cap 100 chars; los % del LIKE los añade el código
+- length: allow-list [10, 25, 50, 100]; draw casteado a int
+- XSS en JSON: htmlspecialchars() en cada celda antes de json_encode()
+- Ruta /activity-logs/data registrada ANTES de /activity-logs en routes/web.php
+- Guards timeout() + admin() en ambos métodos del controller
+- Sin _csrf en el endpoint JSON (GET idempotente)
+- Export exporta solo la página visible — limitación esperada, documentar
+
+[Formato de salida]
+Plan en fases atómicas: 1-Model, 2-Rutas+Controller, 3-Vista, 4-JS, 5-Tests, 6-Docs.
+Para cada fase: objetivo, archivos, cambios técnicos, criterio de done.
+Al final: queries SQL finales, consideraciones de seguridad, checklist de testing manual.
+```
+
+---
+
+_Última actualización: 2026-06-24 — v1.13.0_
 _Mantener sincronizado con CLAUDE.md al agregar features nuevas._

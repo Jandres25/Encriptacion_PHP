@@ -2,7 +2,7 @@
 
 # SecureAuth — PHP MVC Authentication System
 
-[![Version](https://img.shields.io/badge/version-1.12.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.12.0)
+[![Version](https://img.shields.io/badge/version-1.13.0-blue.svg?style=flat-square)](https://github.com/Jandres25/Encriptacion_PHP/releases/tag/1.13.0)
 [![Tests](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml/badge.svg)](https://github.com/Jandres25/Encriptacion_PHP/actions/workflows/tests.yml)
 [![PHP Version](https://img.shields.io/badge/PHP->=8.2-777BB4.svg?style=flat-square&logo=php)](https://php.net/)
 [![PHPMailer](https://img.shields.io/badge/PHPMailer-^6.9-1F3B5F.svg?style=flat-square)](https://github.com/PHPMailer/PHPMailer)
@@ -29,10 +29,10 @@ Custom PHP MVC authentication system built with Composer, a lightweight router, 
 - **HTTP Security Headers** — `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy` and more via `mod_headers` in `.htaccess`; HSTS ready for HTTPS
 - **Secure session cookie** — `session_start_secure()` helper enforces `HttpOnly`, `SameSite=Strict` and conditional `Secure` flag on every session start
 - **Custom error pages** — styled 404, 403 and 500 views matching the app's design; standalone (no DB dependency)
-- **Audit log** — all security and admin events (logins, logouts, password changes, user CRUD) recorded in `activity_logs`; admin-only view at `/activity-logs` with DataTables
+- **Audit log** — all security and admin events (logins, logouts, password changes, user CRUD) recorded in `activity_logs`; admin-only view at `/activity-logs` with DataTables server-side processing; filterable by event type, username (partial match), and date range via collapsible filter form
 - **Dashboard with real metrics** — home page shows 4 live stat-cards (total users, successful logins today, failed logins today, locked accounts) and a Bootstrap table of the 5 most recent audit events; queries via `User::getTotalCount()`, `ActivityLog::getCountTodayByEvent()`, `ActivityLog::getRecentEvents()`, `LoginAttempt::getLockedCount()`
 - **DataTables Buttons + ColVis** — export buttons (Copy, PDF, Excel, CSV, Print) and column visibility toggle on `/users` and `/activity-logs`; PDF/Excel with custom title, subtitle, date and footer; Actions column excluded from all exports; assets self-hosted (Buttons 2.4.2)
-- **Integration test suite** — 50 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
+- **Integration test suite** — 58 PHPUnit tests against a real MySQL DB; CI via GitHub Actions
 - SweetAlert2 toast notifications for all CRUD and authentication actions
 - Per-page asset injection — `$pageStyles` / `$pageScripts` arrays in shared layouts
 - Shared layout system — `header.php` / `footer.php` accept `$pageTitle`, `$favicon`, `$bodyClass`, `$useDataTables` (loads DataTables core + Buttons + ColVis when `true`)
@@ -82,7 +82,7 @@ SMTP_PORT=587
 
 APP_URL=http://localhost/Encriptacion_PHP/public
 APP_TIMEZONE=America/Bogota
-APP_VERSION=1.12.0
+APP_VERSION=1.13.0
 
 CACHE_ENABLED=true
 CACHE_TTL_USERS=60
@@ -207,6 +207,7 @@ All routes are declared in `routes/web.php` and dispatched by `App\Core\Router`:
 | `/users/edit?id=X`          | `UserController::edit()`              |
 | `POST /users/delete`        | `UserController::delete()`            |
 | `/activity-logs`            | `ActivityLogController::index()`      |
+| `/activity-logs/data`       | `ActivityLogController::data()`       |
 
 ## Security
 
@@ -258,7 +259,7 @@ cp .env.testing.example .env.testing   # or create it manually from .env.testing
 composer test
 
 # Run by suite
-composer test:unit         # App\Model\User + App\Model\LoginAttempt + App\Model\ActivityLog — 31 tests
+composer test:unit         # App\Model\User + App\Model\LoginAttempt + App\Model\ActivityLog — 39 tests
 composer test:integration  # App\Core\Auth — 19 tests
 ```
 
