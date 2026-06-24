@@ -130,4 +130,98 @@ final class ActivityLogTest extends TestCase
         $this->assertSame('second', $logs[0]['description']);
         $this->assertSame('first', $logs[1]['description']);
     }
+
+    // --- getAll() con filtros ---
+
+    #[Test]
+    public function get_all_filters_by_event(): void
+    {
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, 'ok');
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_FAILED, 'fail');
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_FAILED, 'fail2');
+
+        $logs = $this->model->getAll(['event' => ActivityLog::EVENT_LOGIN_FAILED]);
+        $this->assertCount(2, $logs);
+        foreach ($logs as $log) {
+            $this->assertSame(ActivityLog::EVENT_LOGIN_FAILED, $log['event']);
+        }
+    }
+
+    #[Test]
+    public function get_all_filters_by_user_id(): void
+    {
+        $user = $this->createUser();
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, 'user event', $user['id']);
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_FAILED, 'anon event');
+
+        $logs = $this->model->getAll(['user_id' => $user['id']]);
+        $this->assertCount(1, $logs);
+        $this->assertSame('user event', $logs[0]['description']);
+    }
+
+    #[Test]
+    public function get_all_filters_by_date_range(): void
+    {
+        self::$db->query("INSERT INTO activity_logs (event, description, created_at) VALUES ('login_success', 'old', '2020-01-01 12:00:00')");
+        self::$db->query("INSERT INTO activity_logs (event, description, created_at) VALUES ('login_success', 'in range', '2020-06-15 12:00:00')");
+        self::$db->query("INSERT INTO activity_logs (event, description, created_at) VALUES ('login_success', 'future', '2030-01-01 12:00:00')");
+
+        $logs = $this->model->getAll(['date_from' => '2020-01-01', 'date_to' => '2020-12-31']);
+        $this->assertCount(2, $logs);
+    }
+
+    #[Test]
+    public function get_all_respects_limit_and_offset(): void
+    {
+        for ($i = 1; $i <= 5; $i++) {
+            ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, "event $i");
+        }
+
+        $page1 = $this->model->getAll([], 2, 0);
+        $page2 = $this->model->getAll([], 2, 2);
+        $this->assertCount(2, $page1);
+        $this->assertCount(2, $page2);
+        $this->assertNotSame($page1[0]['description'], $page2[0]['description']);
+    }
+
+    #[Test]
+    public function get_all_combines_event_and_user_id_with_and(): void
+    {
+        $user = $this->createUser();
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, 'user+success', $user['id']);
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_FAILED, 'user+failed', $user['id']);
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, 'anon+success');
+
+        $logs = $this->model->getAll(['event' => ActivityLog::EVENT_LOGIN_SUCCESS, 'user_id' => $user['id']]);
+        $this->assertCount(1, $logs);
+        $this->assertSame('user+success', $logs[0]['description']);
+    }
+
+    // --- getTotalCount() ---
+
+    #[Test]
+    public function get_total_count_returns_zero_on_empty_table(): void
+    {
+        $this->assertSame(0, $this->model->getTotalCount());
+    }
+
+    #[Test]
+    public function get_total_count_returns_all_rows_without_filters(): void
+    {
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, 'a');
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGOUT, 'b');
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_FAILED, 'c');
+
+        $this->assertSame(3, $this->model->getTotalCount());
+    }
+
+    #[Test]
+    public function get_total_count_filters_by_event(): void
+    {
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, 'a');
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGIN_SUCCESS, 'b');
+        ActivityLog::logTo(self::$db, ActivityLog::EVENT_LOGOUT, 'c');
+
+        $this->assertSame(2, $this->model->getTotalCount(['event' => ActivityLog::EVENT_LOGIN_SUCCESS]));
+    }
 }
