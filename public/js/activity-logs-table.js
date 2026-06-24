@@ -7,9 +7,36 @@ $(document).ready(function () {
     var todayISO = new Date().toISOString().slice(0, 10);
 
     var table = $('#activity_log_table').DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: {
+            url: APP_URL + '/activity-logs/data',
+            type: 'GET',
+            data: function (d) {
+                d.event = $('#filter-event').val();
+                d.user_id = $('#filter-user').val();
+                d.date_from = $('#filter-date-from').val();
+                d.date_to = $('#filter-date-to').val();
+            }
+        },
+        columns: [
+            { title: 'ID' },
+            { title: 'Fecha' },
+            { title: 'Evento', createdCell: function(td) { td.classList.add('text-center'); } },
+            { title: 'Descripción' },
+            { title: 'Usuario' },
+            { title: 'IP' },
+        ],
+        order: [[1, 'desc']],
+        searching: false,
+        pageLength: 25,
+        lengthMenu: [
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
+        ],
         responsive: true,
         autoWidth: false,
-        order: [[0, 'desc']],
+        dom: '<"mb-2"l>Bfrtip',
         buttons: [
             {
                 extend: 'collection',
@@ -101,15 +128,14 @@ $(document).ready(function () {
                 text: 'Columnas'
             }
         ],
-        pageLength: 25,
-        lengthMenu: [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, 'All']
-        ],
         initComplete: function () {
             $(this.api().table().node()).css('visibility', 'visible');
         }
     });
 
     table.buttons().container().appendTo('#activity_log_table_wrapper .col-md-6:eq(0)');
+
+    $('#btn-filter').on('click', function () {
+        table.ajax.reload();
+    });
 });

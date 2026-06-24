@@ -153,10 +153,10 @@ class ActivityLog extends Model
             $params[]  = $filters['event'];
         }
 
-        if (!empty($filters['username'])) {
-            $clauses[] = 'u.username LIKE ?';
-            $types    .= 's';
-            $params[]  = '%' . $filters['username'] . '%';
+        if (!empty($filters['user_id'])) {
+            $clauses[] = 'al.user_id = ?';
+            $types    .= 'i';
+            $params[]  = (int) $filters['user_id'];
         }
 
         if (!empty($filters['date_from'])) {
